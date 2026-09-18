@@ -75,12 +75,23 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       letter-spacing: 0.05em;
     }
+
+    /* Hide scrollbar on chip slider */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="min-h-screen text-slate-100 flex flex-col justify-between p-2 sm:p-5">
 
   <!-- Floating Emojis Layer -->
   <div id="floating-emojis-container" class="fixed inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden"></div>
+
+  <!-- Live In-Game Floating Chat Toast -->
+  <div id="live-chat-toast" class="hidden fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-slate-900/95 border-2 border-emerald-500 rounded-2xl shadow-2xl flex items-center gap-2 max-w-sm text-xs animate-bounce transition-all">
+    <span class="text-base">💬</span>
+    <span id="toast-sender" class="font-bold text-emerald-400 truncate max-w-[100px]">Player:</span>
+    <span id="toast-text" class="text-slate-100 truncate">Hello!</span>
+  </div>
 
   <!-- ============================================== -->
   <!-- 🏠 VIEW 1: CLEAN HOMEPAGE                      -->
@@ -117,7 +128,7 @@
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white">Online Multiplayer</div>
-            <div class="text-xs text-slate-400">Play with a friend via link or room code</div>
+            <div class="text-xs text-slate-400">Play with a friend via link or room code with live chat</div>
           </div>
         </div>
         <span class="text-emerald-400 font-bold text-xs group-hover:translate-x-1 transition-transform">Play →</span>
@@ -181,9 +192,9 @@
       </div>
 
       <div class="flex items-center gap-1.5">
-        <button id="btn-chat-toggle" onclick="toggleChat(true)" class="hidden relative p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
-          💬
-          <span id="chat-unread-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">1</span>
+        <button id="btn-chat-toggle" onclick="toggleChat(true)" class="hidden relative px-2.5 py-1 bg-emerald-900/60 hover:bg-emerald-800 border border-emerald-500/50 rounded-xl text-emerald-300 font-bold text-xs flex items-center gap-1 transition">
+          <span>💬 Chat</span>
+          <span id="chat-unread-badge" class="hidden w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">1</span>
         </button>
         <button onclick="toggleRules(true)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold transition">
           Rules
@@ -259,7 +270,7 @@
       <span id="ai-status" class="text-amber-400 font-semibold hidden animate-pulse">Thinking...</span>
     </div>
 
-    <!-- The 8x8 Board Container (NO trajectory markers, clean authentic board!) -->
+    <!-- The 8x8 Board Container -->
     <div id="board-container" class="theme-wood my-auto">
       <div class="board-frame rounded-2xl p-1 shadow-2xl">
         <div id="grid" class="grid grid-cols-8 grid-rows-8 w-[min(88vw,480px)] h-[min(88vw,480px)] rounded-lg overflow-hidden border border-black/40">
@@ -268,9 +279,48 @@
       </div>
     </div>
 
-    <!-- Bottom Controls & Options Bar -->
+    <!-- Bottom Controls & Dynamic Multiplayer Chat Dock -->
     <div class="w-full flex flex-col gap-2 mt-2">
-      <!-- In-match options bar -->
+
+      <!-- ============================================== -->
+      <!-- 💬 DEDICATED IN-GAME MULTIPLAYER CHAT DOCK    -->
+      <!-- ============================================== -->
+      <div id="inmatch-online-chat" class="hidden flex flex-col gap-1.5 bg-slate-800/90 p-2.5 rounded-2xl border border-emerald-500/40 shadow-xl animate-in fade-in">
+        <!-- Live Chat Preview Line -->
+        <div id="inmatch-chat-preview" class="flex items-center justify-between px-2.5 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs">
+          <span id="inmatch-chat-text" class="text-slate-300 truncate font-medium">💬 Live Chat with Opponent</span>
+          <button onclick="toggleChat(true)" class="text-emerald-400 hover:text-emerald-300 font-bold text-[11px] ml-2 flex-shrink-0">Full Log</button>
+        </div>
+
+        <!-- Quick Emojis Bar (1-click to pop on opponent's screen!) -->
+        <div class="flex items-center justify-between px-1 text-xl pt-0.5">
+          <button onclick="sendQuickReaction('👏')" class="hover:scale-125 active:scale-95 transition" title="Clap">👏</button>
+          <button onclick="sendQuickReaction('🔥')" class="hover:scale-125 active:scale-95 transition" title="Fire">🔥</button>
+          <button onclick="sendQuickReaction('🎉')" class="hover:scale-125 active:scale-95 transition" title="Party">🎉</button>
+          <button onclick="sendQuickReaction('😱')" class="hover:scale-125 active:scale-95 transition" title="Shock">😱</button>
+          <button onclick="sendQuickReaction('🤔')" class="hover:scale-125 active:scale-95 transition" title="Thinking">🤔</button>
+          <button onclick="sendQuickReaction('🏆')" class="hover:scale-125 active:scale-95 transition" title="Trophy">🏆</button>
+          <button onclick="sendQuickReaction('🚀')" class="hover:scale-125 active:scale-95 transition" title="Rocket">🚀</button>
+          <button onclick="sendQuickReaction('❤️')" class="hover:scale-125 active:scale-95 transition" title="Heart">❤️</button>
+        </div>
+
+        <!-- Quick Phrase Chips -->
+        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 text-[11px] no-scrollbar">
+          <button onclick="sendChatMessage('Good luck!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Good luck!</button>
+          <button onclick="sendChatMessage('Nice jump!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Nice jump!</button>
+          <button onclick="sendChatMessage('Oops!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Oops!</button>
+          <button onclick="sendChatMessage('Well played!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Well played!</button>
+          <button onclick="sendChatMessage('Rematch?')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Rematch?</button>
+        </div>
+
+        <!-- In-Match Text Input Bar -->
+        <div class="flex items-center gap-1.5 pt-0.5">
+          <input id="inmatch-chat-input" type="text" maxlength="60" placeholder="Type a message to opponent..." class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500" onkeydown="if(event.key==='Enter') sendInMatchChat()" />
+          <button onclick="sendInMatchChat()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow transition">Send</button>
+        </div>
+      </div>
+
+      <!-- In-match offline options bar (for AI / Pass & Play) -->
       <div id="inmatch-offline-bar" class="flex flex-wrap items-center justify-between gap-2 bg-slate-800/60 p-2 rounded-xl border border-slate-700/50 text-xs">
         <div class="flex items-center gap-1">
           <span class="text-slate-400 font-medium">Corners:</span>
@@ -396,12 +446,12 @@
 
 
   <!-- ============================================== -->
-  <!-- 💬 MODAL: IN-GAME CHAT & REACTIONS             -->
+  <!-- 💬 MODAL: FULL CHAT HISTORY & REACTION LOG    -->
   <!-- ============================================== -->
   <div id="modal-chat" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-sm h-[450px] shadow-2xl flex flex-col overflow-hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-sm h-[480px] shadow-2xl flex flex-col overflow-hidden">
       <div class="flex justify-between items-center px-4 py-3 border-b border-slate-800">
-        <h4 class="font-bold text-sm text-white">In-Game Chat</h4>
+        <h4 class="font-bold text-sm text-white">In-Game Chat Log</h4>
         <button onclick="toggleChat(false)" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
@@ -417,13 +467,13 @@
 
       <!-- Messages list -->
       <div id="chat-messages-box" class="flex-1 p-3 overflow-y-auto flex flex-col gap-2 text-xs">
-        <div class="text-center text-slate-500 text-[11px] my-auto">Say hello or react with emojis!</div>
+        <div class="text-center text-slate-500 text-[11px] my-auto">Chat messages and reactions appear here!</div>
       </div>
 
       <!-- Quick Phrases -->
       <div class="px-2 py-1.5 border-t border-slate-800 flex gap-1 overflow-x-auto text-[10px]">
         <button onclick="sendChatMessage('Good luck!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Good luck!</button>
-        <button onclick="sendChatMessage('Nice jump chain!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Nice jump chain!</button>
+        <button onclick="sendChatMessage('Nice jump!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Nice jump!</button>
         <button onclick="sendChatMessage('Oops!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Oops!</button>
         <button onclick="sendChatMessage('Well played!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Well played!</button>
       </div>
@@ -540,8 +590,12 @@
       playTone(freqs[Math.min(hop, freqs.length - 1)], 0.14, 'sine', 0.18);
     }
     function playIllegalMoveSound() {
-      // Dull low thud for illegal attempts
       playTone(130, 0.15, 'sawtooth', 0.16);
+    }
+    function playChatChime() {
+      if (!audioEnabled) return;
+      playTone(587, 0.1, 'sine', 0.15);
+      setTimeout(() => playTone(880, 0.15, 'sine', 0.15), 90);
     }
     function playVictorySound() {
       if (!audioEnabled) return;
@@ -580,6 +634,7 @@
     let hostCornerChoice = '3x4';
     let hostClockChoice = 300;
     let unreadChat = 0;
+    let chatToastTimer = null;
 
     const DIRS = [
       { dr: -1, dc: 0 }, { dr: 1, dc: 0 },
@@ -604,6 +659,7 @@
       stopClock();
       document.getElementById('view-home').classList.remove('hidden');
       document.getElementById('view-game').classList.add('hidden');
+      document.getElementById('inmatch-online-chat').classList.add('hidden');
     }
 
     function goToGame() {
@@ -615,6 +671,7 @@
       gameMode = 'ai';
       document.getElementById('active-game-mode-badge').textContent = `Vs AI (${aiDifficulty})`;
       document.getElementById('inmatch-offline-bar').classList.remove('hidden');
+      document.getElementById('inmatch-online-chat').classList.add('hidden');
       document.getElementById('btn-chat-toggle').classList.add('hidden');
       document.getElementById('peer-status-banner').classList.add('hidden');
       document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
@@ -628,6 +685,7 @@
       gameMode = 'pass';
       document.getElementById('active-game-mode-badge').textContent = 'Pass & Play';
       document.getElementById('inmatch-offline-bar').classList.remove('hidden');
+      document.getElementById('inmatch-online-chat').classList.add('hidden');
       document.getElementById('btn-chat-toggle').classList.add('hidden');
       document.getElementById('peer-status-banner').classList.add('hidden');
       document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
@@ -851,7 +909,7 @@
       moveCount++;
       const result = checkWin();
 
-      // If playing online and local move, sync move & clocks
+      // Sync online moves and clock times
       if (gameMode === 'online' && !isRemote && peerConn) {
         peerConn.send({
           type: 'MOVE',
@@ -869,7 +927,6 @@
         return;
       }
 
-      // Turn switches -> clock switches to opponent!
       currentTurn = currentTurn === 1 ? 2 : 1;
       if (currentTurn === 1) roundNumber++;
       selectedPos = null;
@@ -949,7 +1006,7 @@
           if (isP1Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-white/40 pointer-events-none rounded"></div>`;
           if (isP2Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-red-500/50 pointer-events-none rounded"></div>`;
 
-          // Piece (NO trajectory markers anywhere!)
+          // Piece (NO trajectory markers!)
           if (p !== 0) {
             const pieceDiv = document.createElement('div');
             pieceDiv.className = `w-[82%] h-[82%] rounded-full flex items-center justify-center ${p === 1 ? 'piece-p1' : 'piece-p2'} ${
@@ -964,10 +1021,9 @@
             if (gameMode === 'ai' && currentTurn === 2) return;
             if (gameMode === 'online' && currentTurn !== myPlayerNum) return;
 
-            // Scenario 1: Clicking player's own piece -> Select it or switch selection
+            // Clicking player's own piece -> Select it or switch selection
             if (p === currentTurn) {
               if (selectedPos && selectedPos.r === r && selectedPos.c === c) {
-                // Clicking same piece deselects it
                 selectedPos = null;
               } else {
                 selectedPos = { r, c };
@@ -977,17 +1033,14 @@
               return;
             }
 
-            // Scenario 2: A piece is already selected, and user clicks another square to attempt a move
+            // Target square clicked while piece is selected -> validate move
             if (selectedPos) {
-              // Calculate legal moves for the selected piece
               const moves = getMovesForPiece(selectedPos.r, selectedPos.c);
               const matchingMove = moves.find(m => m.to.r === r && m.to.c === c);
 
               if (matchingMove) {
-                // LEGAL MOVE: Move the piece!
                 executeMove(matchingMove);
               } else {
-                // ILLEGAL MOVE: Flash square RED for blink!
                 triggerIllegalSquare(r, c);
               }
             }
@@ -1215,7 +1268,7 @@
 
       activeRoomCode = code;
       myPlayerNum = 2;
-      flipped = true; // Auto flip perspective for player 2!
+      flipped = true;
 
       document.getElementById('btn-start-join').disabled = true;
       document.getElementById('btn-start-join').textContent = 'Connecting...';
@@ -1279,6 +1332,7 @@
             reason: 'Opponent surrendered the match.'
           });
         } else if (data.type === 'CHAT') {
+          playChatChime();
           displayChatMessage(data.sender, data.text, data.isEmoji);
         }
       });
@@ -1292,6 +1346,7 @@
       gameMode = 'online';
       document.getElementById('active-game-mode-badge').textContent = `Online P2P (${code})`;
       document.getElementById('inmatch-offline-bar').classList.add('hidden');
+      document.getElementById('inmatch-online-chat').classList.remove('hidden');
       document.getElementById('btn-chat-toggle').classList.remove('hidden');
       document.getElementById('peer-status-banner').classList.remove('hidden');
       document.getElementById('peer-status-text').textContent = `Room: ${code}`;
@@ -1308,7 +1363,9 @@
       });
     }
 
-    // Chat & Reactions
+    // ==============================================
+    // --- In-Game Multiplayer Chat Implementation ---
+    // ==============================================
     function sendQuickReaction(emoji) {
       if (!peerConn) return;
       const myName = document.getElementById('input-player-name').value.trim() || 'Player';
@@ -1319,7 +1376,7 @@
     function sendChatMessage(text) {
       if (!peerConn) return;
       const myName = document.getElementById('input-player-name').value.trim() || 'Player';
-      peerConn.send({ type: 'CHAT', sender: myName, text, isEmoji: false });
+      peerConn.send({ type: 'CHAT', sender: myName, text: text, isEmoji: false });
       displayChatMessage(myName, text, false);
     }
 
@@ -1331,7 +1388,16 @@
       input.value = '';
     }
 
+    function sendInMatchChat() {
+      const input = document.getElementById('inmatch-chat-input');
+      const val = input.value.trim();
+      if (!val) return;
+      sendChatMessage(val);
+      input.value = '';
+    }
+
     function displayChatMessage(sender, text, isEmoji) {
+      // 1. Append to full history modal
       const box = document.getElementById('chat-messages-box');
       const msgDiv = document.createElement('div');
       msgDiv.className = 'p-2 rounded-xl bg-slate-800 border border-slate-700 max-w-[85%]';
@@ -1339,6 +1405,28 @@
       box.appendChild(msgDiv);
       box.scrollTop = box.scrollHeight;
 
+      // 2. Update persistent in-game preview text line
+      const previewText = document.getElementById('inmatch-chat-text');
+      if (previewText) {
+        previewText.textContent = `${sender}: ${text}`;
+      }
+
+      // 3. Show animated speech bubble toast at top of board
+      const toast = document.getElementById('live-chat-toast');
+      const toastSender = document.getElementById('toast-sender');
+      const toastText = document.getElementById('toast-text');
+      if (toast && toastSender && toastText) {
+        toastSender.textContent = `${sender}:`;
+        toastText.textContent = text;
+        toast.classList.remove('hidden');
+
+        if (chatToastTimer) clearTimeout(chatToastTimer);
+        chatToastTimer = setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3800);
+      }
+
+      // 4. If emoji, float across screen
       if (isEmoji) {
         const floatBox = document.getElementById('floating-emojis-container');
         const emoDiv = document.createElement('div');
@@ -1348,6 +1436,7 @@
         setTimeout(() => emoDiv.remove(), 2200);
       }
 
+      // 5. Update unread badge on top header if modal is closed
       const isChatHidden = document.getElementById('modal-chat').classList.contains('hidden');
       if (isChatHidden) {
         unreadChat++;

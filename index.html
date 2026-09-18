@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Ugolki (Corners) — Online Multiplayer Web Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e11d48'/><circle cx='50' cy='50' r='30' fill='%23fda4af'/></svg>" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- PeerJS WebRTC CDN -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #0b0f19;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Themes */
+    .theme-wood .sq-light { background-color: #f1dfbf; }
+    .theme-wood .sq-dark { background-color: #b88b4a; }
+    .theme-wood .board-frame {
+      border: 10px solid #5c3a21;
+      background: linear-gradient(145deg, #7c4d28, #4a2e16);
+      box-shadow: 0 20px 35px -5px rgba(0,0,0,0.65);
+    }
+
+    .theme-slate .sq-light { background-color: #cbd5e1; }
+    .theme-slate .sq-dark { background-color: #64748b; }
+    .theme-slate .board-frame {
+      border: 10px solid #1e293b;
+      background: linear-gradient(145deg, #334155, #1e293b);
+      box-shadow: 0 20px 35px -5px rgba(0,0,0,0.65);
+    }
+
+    /* Tactile Pieces */
+    .piece-p1 {
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e2e8f0 45%, #94a3b8 100%);
+      border: 2px solid #cbd5e1;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    }
+    .piece-p2 {
+      background: radial-gradient(circle at 35% 35%, #ef4444 0%, #b91c1c 55%, #7f1d1d 100%);
+      border: 2px solid #f87171;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    }
+
+    /* Floating emoji animation */
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(0.8); }
+      50% { transform: translateY(-45px) scale(1.25); }
+      100% { opacity: 0; transform: translateY(-90px) scale(1); }
+    }
+    .animate-float-emoji {
+      animation: floatUp 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-between p-2 sm:p-5">
+
+  <!-- Floating Emojis Layer -->
+  <div id="floating-emojis-container" class="fixed inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden"></div>
+
+  <!-- Top Header -->
+  <header class="w-full max-w-[560px] flex items-center justify-between py-2 border-b border-slate-800/80">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-400 flex items-center justify-center font-black text-white text-base shadow-md">
+        У
+      </div>
+      <div>
+        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-1.5">
+          Ugolki <span class="text-[10px] font-semibold text-rose-400 bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-800/50">Corners</span>
+        </h1>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="btn-chat-toggle" onclick="toggleChat(true)" class="hidden relative p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
+        💬
+        <span id="chat-unread-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">1</span>
+      </button>
+
+      <button onclick="toggleRules(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold transition">
+        Rules
+      </button>
+    </div>
+  </header>
+
+  <!-- Player Status Cards -->
+  <div class="w-full max-w-[560px] flex flex-col gap-2 mt-2">
+    <!-- Equal turn banner -->
+    <div id="equal-turns-banner" class="hidden bg-amber-500/20 border border-amber-500/50 rounded-xl px-3 py-1.5 text-amber-300 text-xs font-semibold animate-pulse text-center">
+      Equal Turns Rule: Player 1 filled corner! Player 2 gets final move to match for a Draw!
+    </div>
+
+    <!-- Online Peer connection status banner -->
+    <div id="peer-status-banner" class="hidden p-2 rounded-xl text-xs font-medium text-center flex items-center justify-between bg-slate-800/90 border border-slate-700">
+      <span id="peer-status-text" class="text-slate-300">Connecting to peer...</span>
+      <button onclick="copyRoomLink()" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold rounded">
+        Copy Invite Link
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <!-- Player 1 -->
+      <div id="p1-card" class="p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 transition-all">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded-full piece-p1"></div>
+            <span id="p1-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[120px]">Player 1 (White)</span>
+          </div>
+          <span id="p1-turn-badge" class="text-[10px] font-bold uppercase bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded shadow">Turn</span>
+        </div>
+        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+          <span>Goal:</span>
+          <span id="p1-goal-text" class="font-bold text-slate-200">0/12</span>
+        </div>
+        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+          <div id="p1-progress-bar" class="bg-slate-200 h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Player 2 -->
+      <div id="p2-card" class="p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 transition-all">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded-full piece-p2"></div>
+            <span id="p2-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[120px]">Computer</span>
+          </div>
+          <span id="p2-turn-badge" class="hidden text-[10px] font-bold uppercase bg-red-500 text-white px-1.5 py-0.5 rounded shadow">Turn</span>
+        </div>
+        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+          <span>Goal:</span>
+          <span id="p2-goal-text" class="font-bold text-slate-200">0/12</span>
+        </div>
+        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+          <div id="p2-progress-bar" class="bg-red-500 h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Match Stats -->
+    <div class="flex justify-between px-2 text-xs text-slate-400">
+      <div class="flex gap-3">
+        <span>Mode: <strong id="mode-display" class="text-slate-200 uppercase">3x4</strong></span>
+        <span>Round: <strong id="round-display" class="text-slate-200">1</strong></span>
+        <span>Moves: <strong id="moves-display" class="text-slate-200">0</strong></span>
+      </div>
+      <span id="ai-status" class="text-amber-400 font-semibold hidden animate-pulse">Thinking...</span>
+    </div>
+  </div>
+
+  <!-- Board Container -->
+  <div id="board-container" class="theme-wood my-auto">
+    <div class="board-frame rounded-2xl p-1 shadow-2xl">
+      <div id="grid" class="grid grid-cols-8 grid-rows-8 w-[min(88vw,500px)] h-[min(88vw,500px)] rounded-lg overflow-hidden border border-black/40">
+        <!-- Cells generated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls Panel -->
+  <div class="w-full max-w-[560px] flex flex-col gap-2 mb-1">
+    <!-- Mode Switcher Tabs -->
+    <div class="flex items-center justify-between gap-1 p-1 bg-slate-800/80 rounded-xl border border-slate-700/60 text-xs">
+      <button id="btn-mode-ai" onclick="switchGameMode('ai')" class="flex-1 py-1.5 rounded-lg font-bold bg-rose-600 text-white shadow">Vs AI</button>
+      <button id="btn-mode-pass" onclick="switchGameMode('pass')" class="flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">Pass & Play</button>
+      <button id="btn-mode-online" onclick="openOnlineModal()" class="flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-emerald-300">🌐 Online Play</button>
+    </div>
+
+    <!-- Options Sub-bar (offline modes only) -->
+    <div id="offline-options" class="flex flex-wrap items-center justify-between gap-2 bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/40 text-xs">
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 px-1 font-medium">Corner:</span>
+        <button onclick="setCornerMode('3x3')" id="btn-corner-3x3" class="px-2 py-0.5 rounded font-bold text-slate-400">3x3</button>
+        <button onclick="setCornerMode('3x4')" id="btn-corner-3x4" class="px-2 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">3x4</button>
+        <button onclick="setCornerMode('4x4')" id="btn-corner-4x4" class="px-2 py-0.5 rounded font-bold text-slate-400">4x4</button>
+      </div>
+
+      <div id="ai-diff-container" class="flex items-center gap-1">
+        <span class="text-slate-400 px-1 font-medium">AI:</span>
+        <button onclick="setAIDifficulty('easy')" id="btn-ai-easy" class="px-1.5 py-0.5 rounded font-bold text-slate-400">Easy</button>
+        <button onclick="setAIDifficulty('medium')" id="btn-ai-medium" class="px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">Med</button>
+        <button onclick="setAIDifficulty('hard')" id="btn-ai-hard" class="px-1.5 py-0.5 rounded font-bold text-slate-400">Hard</button>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <button onclick="undoMove()" id="btn-undo" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition disabled:opacity-40" disabled>
+          Undo
+        </button>
+        <button onclick="handleNewGameClick()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          New Game
+        </button>
+        <button onclick="resignMatch()" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-950/50 border border-slate-700 text-rose-400 rounded-xl text-xs font-semibold transition">
+          Resign
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="toggleFlip()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          Flip
+        </button>
+        <button onclick="toggleTheme()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          Theme
+        </button>
+        <button onclick="toggleAudio()" id="btn-sound" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          Sound: On
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online Multiplayer Modal (WebRTC Peer-to-Peer) -->
+  <div id="modal-online" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">🌐 Online Multiplayer (P2P)</h3>
+        <button onclick="toggleOnlineModal(false)" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <!-- Player Name -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-slate-400 uppercase font-semibold">Your Nickname</label>
+        <input id="input-player-name" type="text" maxlength="15" value="Player" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 font-medium" />
+      </div>
+
+      <!-- Options Tab: Host or Join -->
+      <div class="grid grid-cols-2 gap-2 bg-slate-800 p-1 rounded-xl text-xs font-bold">
+        <button id="btn-tab-host" onclick="setOnlineTab('host')" class="py-2 rounded-lg bg-emerald-600 text-white shadow">Create Room</button>
+        <button id="btn-tab-join" onclick="setOnlineTab('join')" class="py-2 rounded-lg text-slate-400 hover:text-white">Join Room</button>
+      </div>
+
+      <!-- Tab: Host Room -->
+      <div id="tab-host-content" class="flex flex-col gap-3">
+        <div>
+          <label class="text-xs text-slate-400 font-semibold block mb-1">Corner Preset</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setHostCorner('3x3')" id="btn-host-3x3" class="py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">3x3 (9 pcs)</button>
+            <button onclick="setHostCorner('3x4')" id="btn-host-3x4" class="py-2 rounded-xl border border-emerald-500 bg-emerald-600/20 text-xs font-bold text-emerald-300">3x4 (12 pcs)</button>
+            <button onclick="setHostCorner('4x4')" id="btn-host-4x4" class="py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">4x4 (16 pcs)</button>
+          </div>
+        </div>
+
+        <button onclick="startHosting()" id="btn-start-host" class="mt-2 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition">
+          Generate Room & Invite Link
+        </button>
+      </div>
+
+      <!-- Tab: Join Room -->
+      <div id="tab-join-content" class="hidden flex flex-col gap-3">
+        <div>
+          <label class="text-xs text-slate-400 font-semibold block mb-1">Enter 6-Letter Room Code</label>
+          <input id="input-join-code" type="text" maxlength="8" placeholder="e.g. UG8K1A" class="w-full text-center tracking-widest font-mono text-lg px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500 uppercase" />
+        </div>
+
+        <button onclick="joinRoomByCode()" id="btn-start-join" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition">
+          Connect & Join Match
+        </button>
+      </div>
+
+      <!-- Active Host Info View -->
+      <div id="host-active-info" class="hidden flex flex-col gap-3 p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl">
+        <span class="text-xs font-bold text-emerald-400 uppercase">Room Created! Waiting for opponent...</span>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-400">Room Code:</span>
+          <strong id="display-room-code" class="text-lg font-mono tracking-widest text-white">UG8K1A</strong>
+        </div>
+        <button onclick="copyRoomLink()" id="btn-copy-link" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2">
+          <span>📋 Copy Shareable Invite Link</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat & Emoji Modal -->
+  <div id="modal-chat" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-sm h-[450px] shadow-2xl flex flex-col overflow-hidden">
+      <div class="flex justify-between items-center px-4 py-3 border-b border-slate-800">
+        <h4 class="font-bold text-sm text-white">In-Game Chat</h4>
+        <button onclick="toggleChat(false)" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+
+      <!-- Quick Reactions Bar -->
+      <div class="px-3 py-2 border-b border-slate-800 flex items-center justify-between text-2xl bg-slate-800/40">
+        <button onclick="sendQuickReaction('🎉')" class="hover:scale-125 transition">🎉</button>
+        <button onclick="sendQuickReaction('🔥')" class="hover:scale-125 transition">🔥</button>
+        <button onclick="sendQuickReaction('👏')" class="hover:scale-125 transition">👏</button>
+        <button onclick="sendQuickReaction('😱')" class="hover:scale-125 transition">😱</button>
+        <button onclick="sendQuickReaction('🏆')" class="hover:scale-125 transition">🏆</button>
+        <button onclick="sendQuickReaction('🚀')" class="hover:scale-125 transition">🚀</button>
+      </div>
+
+      <!-- Messages list -->
+      <div id="chat-messages-box" class="flex-1 p-3 overflow-y-auto flex flex-col gap-2 text-xs">
+        <div class="text-center text-slate-500 text-[11px] my-auto">Say hello or react with emojis!</div>
+      </div>
+
+      <!-- Quick Phrases -->
+      <div class="px-2 py-1.5 border-t border-slate-800 flex gap-1 overflow-x-auto text-[10px]">
+        <button onclick="sendChatMessage('Good luck!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Good luck!</button>
+        <button onclick="sendChatMessage('Nice jump chain!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Nice jump chain!</button>
+        <button onclick="sendChatMessage('Oops!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Oops!</button>
+        <button onclick="sendChatMessage('Well played!')" class="px-2 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-700 whitespace-nowrap">Well played!</button>
+      </div>
+
+      <!-- Input footer -->
+      <div class="p-2 border-t border-slate-800 flex gap-1.5">
+        <input id="chat-input" type="text" maxlength="60" placeholder="Message..." class="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500" onkeydown="if(event.key==='Enter') sendCustomChat()" />
+        <button onclick="sendCustomChat()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div id="modal-gameover" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl flex flex-col items-center">
+      <div id="gameover-trophy" class="w-16 h-16 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-3xl mb-3">
+        🏆
+      </div>
+      <h2 id="gameover-title" class="text-2xl font-extrabold text-white mb-1">Player 1 Wins!</h2>
+      <p id="gameover-reason" class="text-xs text-slate-300 mb-5 leading-relaxed">All pieces reached the goal corner!</p>
+
+      <div class="w-full bg-slate-800 p-3 rounded-xl mb-5 flex justify-around text-xs">
+        <div><span class="text-slate-400 block">Rounds</span><strong id="gameover-rounds" class="text-base text-white">12</strong></div>
+        <div><span class="text-slate-400 block">Moves</span><strong id="gameover-moves" class="text-base text-white">24</strong></div>
+      </div>
+
+      <div class="flex gap-2 w-full">
+        <button onclick="handleRematch()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg text-xs">
+          Play Again
+        </button>
+        <button onclick="toggleGameOver(false)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div id="modal-rules" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-300 text-xs leading-relaxed max-h-[85vh] overflow-y-auto">
+      <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2">📖 How to Play Ugolki (Corners)</h2>
+
+      <div class="space-y-3">
+        <div>
+          <strong class="text-amber-400 block text-sm">1. The Goal</strong>
+          Move all your pieces across the board into the opponent's starting corner.
+        </div>
+        <div>
+          <strong class="text-emerald-400 block text-sm">2. Moving</strong>
+          Pieces move <strong>orthogonally</strong> (Up, Down, Left, Right). No diagonal moves allowed!
+          <ul class="list-disc list-inside mt-1 space-y-0.5 text-slate-400">
+            <li><strong>Step:</strong> Move 1 square into adjacent empty cell.</li>
+            <li><strong>Jump:</strong> Jump over an adjacent piece into the empty square directly behind it.</li>
+          </ul>
+        </div>
+        <div>
+          <strong class="text-cyan-400 block text-sm">3. Multi-Jumps (The Core Strategy!)</strong>
+          You can chain multiple jumps together in a single turn to fly all the way across the board! You may stop at any jump landing.
+        </div>
+        <div>
+          <strong class="text-purple-400 block text-sm">4. Equal Turns Rule</strong>
+          Player 1 moves first. If Player 1 finishes, Player 2 gets one final turn to match. If both finish on that turn, it is an honorable <strong>Draw</strong>!
+        </div>
+        <div>
+          <strong class="text-rose-400 block text-sm">5. Anti-Camping</strong>
+          Vacate your starting corner within the round limit (20-30 moves).
+        </div>
+      </div>
+
+      <button onclick="toggleRules(false)" class="mt-5 w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-xl transition">
+        Got it!
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // --- Audio Synthesizer (Web Audio API) ---
+    let audioEnabled = true;
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    function playTone(freq, duration = 0.1, type = 'sine', gainVal = 0.15) {
+      if (!audioEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch(e) {}
+    }
+    function playStepSound() { playTone(240, 0.08, 'triangle', 0.2); }
+    function playJumpSound(hop = 0) {
+      const freqs = [392, 523, 659, 784, 1046];
+      playTone(freqs[Math.min(hop, freqs.length - 1)], 0.14, 'sine', 0.18);
+    }
+    function playVictorySound() {
+      if (!audioEnabled) return;
+      [523, 659, 784, 1046].forEach((f, i) => {
+        setTimeout(() => playTone(f, 0.35, 'triangle', 0.2), i * 120);
+      });
+    }
+
+    // --- State Variables ---
+    let board = [];
+    let currentTurn = 1;
+    let roundNumber = 1;
+    let moveCount = 0;
+    let p1FinishedAtRound = null;
+    let selectedPos = null;
+    let legalMoves = [];
+    let history = [];
+    let cornerMode = '3x4';
+    let gameMode = 'ai'; // 'ai' | 'pass' | 'online'
+    let aiDifficulty = 'medium';
+    let theme = 'wood';
+    let flipped = false;
+    let gameOver = false;
+
+    // Online P2P Variables
+    let peer = null;
+    let peerConn = null;
+    let myPlayerNum = 1; // 1 = host, 2 = guest
+    let activeRoomCode = null;
+    let hostCornerChoice = '3x4';
+    let unreadChat = 0;
+
+    const DIRS = [
+      { dr: -1, dc: 0 }, { dr: 1, dc: 0 },
+      { dr: 0, dc: -1 }, { dr: 0, dc: 1 }
+    ];
+
+    function isInsideCorner(r, c, player, mode, isTarget) {
+      if (r < 0 || r >= 8 || c < 0 || c >= 8) return false;
+      const isTopLeft = (player === 1 && !isTarget) || (player === 2 && isTarget);
+      if (mode === '3x3') return isTopLeft ? (r < 3 && c < 3) : (r >= 5 && c >= 5);
+      if (mode === '3x4') return isTopLeft ? (r < 3 && c < 4) : (r >= 5 && c >= 4);
+      if (mode === '4x4') return isTopLeft ? (r < 4 && c < 4) : (r >= 4 && c >= 4);
+      return false;
+    }
+
+    function getPieceCount(mode) {
+      return mode === '3x3' ? 9 : mode === '3x4' ? 12 : 16;
+    }
+
+    function initGame() {
+      board = Array(8).fill(0).map(() => Array(8).fill(0));
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (isInsideCorner(r, c, 1, cornerMode, false)) board[r][c] = 1;
+          if (isInsideCorner(r, c, 2, cornerMode, false)) board[r][c] = 2;
+        }
+      }
+      currentTurn = 1;
+      roundNumber = 1;
+      moveCount = 0;
+      p1FinishedAtRound = null;
+      selectedPos = null;
+      legalMoves = [];
+      history = [];
+      gameOver = false;
+      document.getElementById('equal-turns-banner').classList.add('hidden');
+      render();
+    }
+
+    function getMovesForPiece(r, c) {
+      const moves = [];
+      const p = board[r][c];
+      if (!p) return moves;
+
+      // 1. Single Step
+      for (const { dr, dc } of DIRS) {
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr][nc] === 0) {
+          moves.push({ from: { r, c }, to: { r: nr, c: nc }, hops: 1, isJump: false });
+        }
+      }
+
+      // 2. BFS Multi-Jumps
+      const visited = new Set([`${r},${c}`]);
+      const queue = [{ pos: { r, c }, hops: 0 }];
+
+      while (queue.length > 0) {
+        const curr = queue.shift();
+        for (const { dr, dc } of DIRS) {
+          const midR = curr.pos.r + dr, midC = curr.pos.c + dc;
+          const landR = curr.pos.r + 2 * dr, landC = curr.pos.c + 2 * dc;
+          if (landR >= 0 && landR < 8 && landC >= 0 && landC < 8) {
+            if (board[midR][midC] !== 0 && board[landR][landC] === 0) {
+              const key = `${landR},${landC}`;
+              if (!visited.has(key)) {
+                visited.add(key);
+                const nextHops = curr.hops + 1;
+                moves.push({ from: { r, c }, to: { r: landR, c: landC }, hops: nextHops, isJump: true });
+                queue.push({ pos: { r: landR, c: landC }, hops: nextHops });
+              }
+            }
+          }
+        }
+      }
+      return moves;
+    }
+
+    function countInGoal(player) {
+      let count = 0;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (isInsideCorner(r, c, player, cornerMode, true) && board[r][c] === player) {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    function checkWin() {
+      const total = getPieceCount(cornerMode);
+      const p1In = countInGoal(1);
+      const p2In = countInGoal(2);
+
+      if (currentTurn === 1 && p1In === total && p1FinishedAtRound === null) {
+        p1FinishedAtRound = roundNumber;
+        document.getElementById('equal-turns-banner').classList.remove('hidden');
+        return null;
+      }
+
+      if (currentTurn === 2) {
+        if (p1FinishedAtRound !== null) {
+          if (p2In === total) return { winner: 'draw', reason: 'Both players completed in the same number of turns!' };
+          return { winner: 1, reason: 'Player 1 moved all pieces into the goal corner first!' };
+        } else if (p2In === total) {
+          return { winner: 2, reason: 'Player 2 moved all pieces into the goal corner first!' };
+        }
+      }
+      return null;
+    }
+
+    function executeMove(move, isRemote = false) {
+      history.push({
+        board: board.map(row => [...row]),
+        currentTurn,
+        roundNumber,
+        moveCount,
+        p1FinishedAtRound
+      });
+
+      const p = board[move.from.r][move.from.c];
+      board[move.from.r][move.from.c] = 0;
+      board[move.to.r][move.to.c] = p;
+
+      if (move.isJump) playJumpSound(move.hops - 1);
+      else playStepSound();
+
+      moveCount++;
+      const result = checkWin();
+
+      // If playing online and local move, send to peer
+      if (gameMode === 'online' && !isRemote && peerConn) {
+        peerConn.send({ type: 'MOVE', move });
+      }
+
+      if (result) {
+        gameOver = true;
+        render();
+        showGameOver(result);
+        return;
+      }
+
+      currentTurn = currentTurn === 1 ? 2 : 1;
+      if (currentTurn === 1) roundNumber++;
+      selectedPos = null;
+      legalMoves = [];
+      render();
+
+      if (gameMode === 'ai' && currentTurn === 2 && !gameOver) {
+        triggerAI();
+      }
+    }
+
+    function triggerAI() {
+      document.getElementById('ai-status').classList.remove('hidden');
+      setTimeout(() => {
+        const moves = [];
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            if (board[r][c] === 2) moves.push(...getMovesForPiece(r, c));
+          }
+        }
+        if (moves.length === 0) return;
+
+        const targetR = 0, targetC = 0;
+        let bestMove = moves[0];
+        let bestScore = -9999;
+
+        for (const m of moves) {
+          const oldDist = Math.abs(m.from.r - targetR) + Math.abs(m.from.c - targetC);
+          const newDist = Math.abs(m.to.r - targetR) + Math.abs(m.to.c - targetC);
+          let score = (oldDist - newDist) * 10;
+          if (m.isJump) score += m.hops * 4;
+
+          const isTarget = isInsideCorner(m.to.r, m.to.c, 2, cornerMode, true);
+          if (isTarget) score += 35;
+
+          if (aiDifficulty === 'easy') {
+            score += Math.random() * 14 - 7;
+          } else if (aiDifficulty === 'hard') {
+            score += (14 - (m.to.r + m.to.c)) * 4;
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = m;
+          }
+        }
+
+        document.getElementById('ai-status').classList.add('hidden');
+        executeMove(bestMove);
+      }, 350);
+    }
+
+    function render() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      const rows = flipped ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
+      const cols = flipped ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
+
+      const movesMap = new Map();
+      for (const m of legalMoves) movesMap.set(`${m.to.r},${m.to.c}`, m);
+
+      for (let rIdx = 0; rIdx < 8; rIdx++) {
+        for (let cIdx = 0; cIdx < 8; cIdx++) {
+          const r = rows[rIdx];
+          const c = cols[cIdx];
+          const p = board[r][c];
+          const isDark = (r + c) % 2 === 1;
+          const isP1Home = isInsideCorner(r, c, 1, cornerMode, false);
+          const isP2Home = isInsideCorner(r, c, 2, cornerMode, false);
+          const isSelected = selectedPos && selectedPos.r === r && selectedPos.c === c;
+          const move = movesMap.get(`${r},${c}`);
+
+          const cell = document.createElement('div');
+          cell.className = `relative flex items-center justify-center cursor-pointer transition-colors ${isDark ? 'sq-dark' : 'sq-light'}`;
+
+          // Corners
+          if (isP1Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-white/40 pointer-events-none rounded"></div>`;
+          if (isP2Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-red-500/50 pointer-events-none rounded"></div>`;
+
+          // Piece
+          if (p !== 0) {
+            const pieceDiv = document.createElement('div');
+            pieceDiv.className = `w-[82%] h-[82%] rounded-full flex items-center justify-center ${p === 1 ? 'piece-p1' : 'piece-p2'} ${isSelected ? 'ring-4 ring-amber-400 animate-pulse' : 'hover:scale-105'} transition-transform`;
+            pieceDiv.innerHTML = `<div class="w-[65%] h-[65%] rounded-full border border-white/30 flex items-center justify-center"><div class="w-[40%] h-[40%] rounded-full bg-black/20"></div></div>`;
+            cell.appendChild(pieceDiv);
+          }
+
+          // Legal Move Landing
+          if (move) {
+            const dest = document.createElement('div');
+            dest.className = 'absolute inset-0 flex items-center justify-center pointer-events-none z-10';
+            if (move.isJump) {
+              dest.innerHTML = `<div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-500/90 text-white font-bold text-[10px] sm:text-xs flex items-center justify-center shadow-lg border border-white animate-bounce">${move.hops > 1 ? move.hops + 'x' : '⤹'}</div>`;
+            } else {
+              dest.innerHTML = `<div class="w-3.5 h-3.5 rounded-full bg-amber-400 shadow ring-2 ring-white/70"></div>`;
+            }
+            cell.appendChild(dest);
+          }
+
+          cell.onclick = () => {
+            if (gameOver) return;
+            if (gameMode === 'ai' && currentTurn === 2) return;
+            if (gameMode === 'online' && currentTurn !== myPlayerNum) return;
+
+            if (move) {
+              executeMove(move);
+            } else if (p === currentTurn) {
+              if (selectedPos && selectedPos.r === r && selectedPos.c === c) {
+                selectedPos = null;
+                legalMoves = [];
+              } else {
+                selectedPos = { r, c };
+                legalMoves = getMovesForPiece(r, c);
+                playTone(440, 0.05, 'sine', 0.1);
+              }
+              render();
+            }
+          };
+
+          grid.appendChild(cell);
+        }
+      }
+
+      // UI stats update
+      const total = getPieceCount(cornerMode);
+      const p1In = countInGoal(1);
+      const p2In = countInGoal(2);
+
+      document.getElementById('p1-goal-text').textContent = `${p1In}/${total}`;
+      document.getElementById('p2-goal-text').textContent = `${p2In}/${total}`;
+      document.getElementById('p1-progress-bar').style.width = `${Math.round((p1In/total)*100)}%`;
+      document.getElementById('p2-progress-bar').style.width = `${Math.round((p2In/total)*100)}%`;
+
+      document.getElementById('round-display').textContent = roundNumber;
+      document.getElementById('moves-display').textContent = moveCount;
+      document.getElementById('mode-display').textContent = cornerMode;
+
+      const p1Turn = currentTurn === 1;
+      document.getElementById('p1-turn-badge').className = p1Turn ? 'text-[10px] font-bold uppercase bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded shadow' : 'hidden';
+      document.getElementById('p2-turn-badge').className = !p1Turn ? 'text-[10px] font-bold uppercase bg-red-500 text-white px-1.5 py-0.5 rounded shadow' : 'hidden';
+
+      document.getElementById('p1-card').className = p1Turn ? 'p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 shadow-lg ring-2 ring-amber-400/40' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80';
+      document.getElementById('p2-card').className = !p1Turn ? 'p-3 rounded-2xl border border-red-500/80 bg-slate-800/90 shadow-lg ring-2 ring-red-500/40' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80';
+
+      document.getElementById('btn-undo').disabled = history.length === 0 || gameMode === 'online';
+    }
+
+    function showGameOver(res) {
+      if (res.winner === 1 || res.winner === 'draw') playVictorySound();
+      if (window.confetti && (res.winner === 1 || res.winner === 2)) {
+        confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+      }
+      const p1Label = document.getElementById('p1-name-label').textContent;
+      const p2Label = document.getElementById('p2-name-label').textContent;
+      const winText = res.winner === 'draw' ? 'Match Draw!' : res.winner === 1 ? `${p1Label} Wins!` : `${p2Label} Wins!`;
+
+      document.getElementById('gameover-title').textContent = winText;
+      document.getElementById('gameover-reason').textContent = res.reason;
+      document.getElementById('gameover-rounds').textContent = roundNumber;
+      document.getElementById('gameover-moves').textContent = moveCount;
+      document.getElementById('modal-gameover').classList.remove('hidden');
+    }
+
+    function toggleGameOver(show) {
+      document.getElementById('modal-gameover').classList.toggle('hidden', !show);
+    }
+
+    function toggleRules(show) {
+      document.getElementById('modal-rules').classList.toggle('hidden', !show);
+    }
+
+    function toggleChat(show) {
+      document.getElementById('modal-chat').classList.toggle('hidden', !show);
+      if (show) {
+        unreadChat = 0;
+        document.getElementById('chat-unread-badge').classList.add('hidden');
+      }
+    }
+
+    function undoMove() {
+      if (history.length === 0 || gameOver || gameMode === 'online') return;
+      const steps = (gameMode === 'ai' && history.length >= 2) ? 2 : 1;
+      let state;
+      for (let i = 0; i < steps; i++) state = history.pop();
+      if (state) {
+        board = state.board;
+        currentTurn = state.currentTurn;
+        roundNumber = state.roundNumber;
+        moveCount = state.moveCount;
+        p1FinishedAtRound = state.p1FinishedAtRound;
+        selectedPos = null;
+        legalMoves = [];
+        render();
+      }
+    }
+
+    function resignMatch() {
+      if (gameOver) return;
+      if (gameMode === 'online' && peerConn) {
+        peerConn.send({ type: 'RESIGN', player: myPlayerNum });
+      }
+      showGameOver({
+        winner: currentTurn === 1 ? 2 : 1,
+        reason: `Player ${currentTurn} resigned the match.`
+      });
+    }
+
+    function handleRematch() {
+      toggleGameOver(false);
+      if (gameMode === 'online' && peerConn) {
+        peerConn.send({ type: 'REMATCH' });
+      }
+      initGame();
+    }
+
+    function handleNewGameClick() {
+      if (gameMode === 'online') {
+        if (confirm('Start a new online match?')) {
+          initGame();
+          if (peerConn) peerConn.send({ type: 'REMATCH' });
+        }
+      } else {
+        initGame();
+      }
+    }
+
+    function switchGameMode(mode) {
+      if (mode === 'online') {
+        openOnlineModal();
+        return;
+      }
+      gameMode = mode;
+      document.getElementById('btn-mode-ai').className = mode === 'ai' ? 'flex-1 py-1.5 rounded-lg font-bold bg-rose-600 text-white shadow' : 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
+      document.getElementById('btn-mode-pass').className = mode === 'pass' ? 'flex-1 py-1.5 rounded-lg font-bold bg-rose-600 text-white shadow' : 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
+      document.getElementById('btn-mode-online').className = 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-emerald-300';
+      document.getElementById('offline-options').classList.remove('hidden');
+      document.getElementById('ai-diff-container').style.display = mode === 'ai' ? 'flex' : 'none';
+      document.getElementById('btn-chat-toggle').classList.add('hidden');
+      document.getElementById('peer-status-banner').classList.add('hidden');
+      document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
+      document.getElementById('p2-name-label').textContent = mode === 'ai' ? 'Computer' : 'Player 2 (Red)';
+      flipped = false;
+      initGame();
+    }
+
+    function setCornerMode(mode) {
+      cornerMode = mode;
+      ['3x3', '3x4', '4x4'].forEach(m => {
+        document.getElementById(`btn-corner-${m}`).className = m === mode ? 'px-2 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow' : 'px-2 py-0.5 rounded font-bold text-slate-400';
+      });
+      initGame();
+    }
+
+    function setAIDifficulty(diff) {
+      aiDifficulty = diff;
+      ['easy', 'medium', 'hard'].forEach(d => {
+        document.getElementById(`btn-ai-${d}`).className = d === diff ? 'px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow' : 'px-1.5 py-0.5 rounded font-bold text-slate-400';
+      });
+    }
+
+    function toggleFlip() {
+      flipped = !flipped;
+      render();
+    }
+
+    function toggleTheme() {
+      theme = theme === 'wood' ? 'slate' : 'wood';
+      document.getElementById('board-container').className = `theme-${theme} my-auto`;
+      render();
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('btn-sound').textContent = `Sound: ${audioEnabled ? 'On' : 'Off'}`;
+    }
+
+    // ==========================================
+    // --- WebRTC Peer-to-Peer Online Engine ---
+    // ==========================================
+    function openOnlineModal() {
+      document.getElementById('modal-online').classList.remove('hidden');
+    }
+
+    function toggleOnlineModal(show) {
+      document.getElementById('modal-online').classList.toggle('hidden', !show);
+    }
+
+    function setOnlineTab(tab) {
+      const isHost = tab === 'host';
+      document.getElementById('btn-tab-host').className = isHost ? 'py-2 rounded-lg bg-emerald-600 text-white shadow' : 'py-2 rounded-lg text-slate-400 hover:text-white';
+      document.getElementById('btn-tab-join').className = !isHost ? 'py-2 rounded-lg bg-emerald-600 text-white shadow' : 'py-2 rounded-lg text-slate-400 hover:text-white';
+      document.getElementById('tab-host-content').classList.toggle('hidden', !isHost);
+      document.getElementById('tab-join-content').classList.toggle('hidden', isHost);
+    }
+
+    function setHostCorner(mode) {
+      hostCornerChoice = mode;
+      ['3x3', '3x4', '4x4'].forEach(m => {
+        document.getElementById(`btn-host-${m}`).className = m === mode ? 'py-2 rounded-xl border border-emerald-500 bg-emerald-600/20 text-xs font-bold text-emerald-300' : 'py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-300';
+      });
+    }
+
+    function genRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let res = '';
+      for (let i = 0; i < 6; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+      return res;
+    }
+
+    function startHosting() {
+      const myName = document.getElementById('input-player-name').value.trim() || 'Player 1';
+      const code = genRoomCode();
+      activeRoomCode = code;
+      myPlayerNum = 1;
+      flipped = false;
+      cornerMode = hostCornerChoice;
+
+      document.getElementById('btn-start-host').disabled = true;
+      document.getElementById('btn-start-host').textContent = 'Creating room...';
+
+      const peerId = `ugolki-p2p-${code}`;
+      if (peer) peer.destroy();
+      peer = new Peer(peerId);
+
+      peer.on('open', () => {
+        document.getElementById('display-room-code').textContent = code;
+        document.getElementById('tab-host-content').classList.add('hidden');
+        document.getElementById('host-active-info').classList.remove('hidden');
+
+        setOnlineGameActive(code, `${myName} (Host)`, 'Waiting for Opponent...');
+      });
+
+      peer.on('connection', conn => {
+        peerConn = conn;
+        setupPeerConnectionHandlers(conn, myName);
+      });
+
+      peer.on('error', err => {
+        alert('Room creation error: ' + err.type);
+        document.getElementById('btn-start-host').disabled = false;
+        document.getElementById('btn-start-host').textContent = 'Generate Room & Invite Link';
+      });
+    }
+
+    function joinRoomByCode(directCode) {
+      const myName = document.getElementById('input-player-name').value.trim() || 'Player 2';
+      const code = (directCode || document.getElementById('input-join-code').value).trim().toUpperCase();
+      if (!code) return;
+
+      activeRoomCode = code;
+      myPlayerNum = 2;
+      flipped = true; // Auto flip perspective for player 2!
+
+      document.getElementById('btn-start-join').disabled = true;
+      document.getElementById('btn-start-join').textContent = 'Connecting...';
+
+      if (peer) peer.destroy();
+      peer = new Peer();
+
+      peer.on('open', () => {
+        const targetPeerId = `ugolki-p2p-${code}`;
+        const conn = peer.connect(targetPeerId);
+        peerConn = conn;
+
+        conn.on('open', () => {
+          toggleOnlineModal(false);
+          setupPeerConnectionHandlers(conn, myName);
+          // Send handshake
+          conn.send({ type: 'HANDSHAKE', name: myName });
+          setOnlineGameActive(code, 'Opponent', `${myName} (You)`);
+        });
+
+        conn.on('error', () => {
+          alert('Could not connect to room: ' + code);
+          document.getElementById('btn-start-join').disabled = false;
+          document.getElementById('btn-start-join').textContent = 'Connect & Join Match';
+        });
+      });
+    }
+
+    function setupPeerConnectionHandlers(conn, myName) {
+      conn.on('data', data => {
+        if (data.type === 'HANDSHAKE') {
+          if (myPlayerNum === 1) {
+            // Host sends initial game configuration & board to guest
+            conn.send({
+              type: 'INIT_STATE',
+              cornerMode,
+              hostName: myName,
+              guestName: data.name
+            });
+            document.getElementById('p1-name-label').textContent = `${myName} (You)`;
+            document.getElementById('p2-name-label').textContent = data.name;
+            document.getElementById('peer-status-text').textContent = `Connected with ${data.name}!`;
+            toggleOnlineModal(false);
+            initGame();
+          }
+        } else if (data.type === 'INIT_STATE') {
+          cornerMode = data.cornerMode;
+          document.getElementById('p1-name-label').textContent = data.hostName;
+          document.getElementById('p2-name-label').textContent = `${data.guestName} (You)`;
+          document.getElementById('peer-status-text').textContent = `Connected with ${data.hostName}!`;
+          initGame();
+        } else if (data.type === 'MOVE') {
+          executeMove(data.move, true);
+        } else if (data.type === 'REMATCH') {
+          initGame();
+        } else if (data.type === 'RESIGN') {
+          showGameOver({
+            winner: myPlayerNum,
+            reason: 'Opponent surrendered the match.'
+          });
+        } else if (data.type === 'CHAT') {
+          displayChatMessage(data.sender, data.text, data.isEmoji);
+        }
+      });
+
+      conn.on('close', () => {
+        document.getElementById('peer-status-text').textContent = 'Opponent disconnected.';
+      });
+    }
+
+    function setOnlineGameActive(code, p1Name, p2Name) {
+      gameMode = 'online';
+      document.getElementById('btn-mode-ai').className = 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
+      document.getElementById('btn-mode-pass').className = 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
+      document.getElementById('btn-mode-online').className = 'flex-1 py-1.5 rounded-lg font-bold bg-emerald-600 text-white shadow';
+      document.getElementById('offline-options').classList.add('hidden');
+      document.getElementById('btn-chat-toggle').classList.remove('hidden');
+      document.getElementById('peer-status-banner').classList.remove('hidden');
+      document.getElementById('peer-status-text').textContent = `Room Code: ${code}`;
+      document.getElementById('p1-name-label').textContent = p1Name;
+      document.getElementById('p2-name-label').textContent = p2Name;
+    }
+
+    function copyRoomLink() {
+      if (!activeRoomCode) return;
+      const url = `${window.location.origin}${window.location.pathname}?join=${activeRoomCode}`;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Shareable Invite Link copied to clipboard!\nSend it to your friend to join.');
+      });
+    }
+
+    // Chat & Reactions
+    function sendQuickReaction(emoji) {
+      if (!peerConn) return;
+      const myName = document.getElementById('input-player-name').value.trim() || 'Player';
+      peerConn.send({ type: 'CHAT', sender: myName, text: emoji, isEmoji: true });
+      displayChatMessage(myName, emoji, true);
+    }
+
+    function sendChatMessage(text) {
+      if (!peerConn) return;
+      const myName = document.getElementById('input-player-name').value.trim() || 'Player';
+      peerConn.send({ type: 'CHAT', sender: myName, text, isEmoji: false });
+      displayChatMessage(myName, text, false);
+    }
+
+    function sendCustomChat() {
+      const input = document.getElementById('chat-input');
+      const val = input.value.trim();
+      if (!val) return;
+      sendChatMessage(val);
+      input.value = '';
+    }
+
+    function displayChatMessage(sender, text, isEmoji) {
+      const box = document.getElementById('chat-messages-box');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'p-2 rounded-xl bg-slate-800 border border-slate-700 max-w-[85%]';
+      msgDiv.innerHTML = `<span class="text-[10px] font-bold text-slate-400 block">${sender}</span><span class="${isEmoji ? 'text-2xl' : 'text-slate-100'}">${text}</span>`;
+      box.appendChild(msgDiv);
+      box.scrollTop = box.scrollHeight;
+
+      if (isEmoji) {
+        const floatBox = document.getElementById('floating-emojis-container');
+        const emoDiv = document.createElement('div');
+        emoDiv.className = 'text-5xl animate-float-emoji select-none';
+        emoDiv.textContent = text;
+        floatBox.appendChild(emoDiv);
+        setTimeout(() => emoDiv.remove(), 2200);
+      }
+
+      const isChatHidden = document.getElementById('modal-chat').classList.contains('hidden');
+      if (isChatHidden) {
+        unreadChat++;
+        const badge = document.getElementById('chat-unread-badge');
+        badge.textContent = unreadChat;
+        badge.classList.remove('hidden');
+      }
+    }
+
+    // Auto-check URL query param: e.g. ?join=ABCDEF
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const joinCode = params.get('join');
+      if (joinCode) {
+        openOnlineModal();
+        setOnlineTab('join');
+        document.getElementById('input-join-code').value = joinCode.toUpperCase();
+      }
+      initGame();
+    });
+  </script>
+</body>
+</html>

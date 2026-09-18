@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: #0f172a;
+  overflow-x: hidden;
+}
+
+/* Wood Board Styles */
+.theme-wood .board-square-light {
+  background-color: #f1dfbf;
+}
+.theme-wood .board-square-dark {
+  background-color: #b88b4a;
+}
+.theme-wood .board-border {
+  border-color: #5c3a21;
+  background: linear-gradient(145deg, #7c4d28, #4a2e16);
+}
+
+/* Slate Board Styles */
+.theme-slate .board-square-light {
+  background-color: #cbd5e1;
+}
+.theme-slate .board-square-dark {
+  background-color: #64748b;
+}
+.theme-slate .board-border {
+  border-color: #1e293b;
+  background: linear-gradient(145deg, #334155, #1e293b);
+}
+
+/* Piece tactile styling */
+.piece-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+}
+
+.piece-p1 {
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e2e8f0 45%, #94a3b8 100%);
+  border: 2px solid #cbd5e1;
+}
+
+.piece-p2 {
+  background: radial-gradient(circle at 35% 35%, #ef4444 0%, #b91c1c 55%, #7f1d1d 100%);
+  border: 2px solid #f87171;
+}
+
+/* Floating reaction animation */
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.8);
+  }
+  50% {
+    transform: translateY(-50px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px) scale(1);
+  }
+}
+
+.animate-float-reaction {
+  animation: float-up 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

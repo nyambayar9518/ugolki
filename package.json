@@ -1,0 +1,15 @@
+{
+  "name": "ugolki-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ugolki (Corners) full-stack web game with real-time multiplayer and AI",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "node dev.js",
+    "build": "npm run build --workspace=client && npm run build --workspace=server",
+    "start": "npm run start --workspace=server"
+  }
+}

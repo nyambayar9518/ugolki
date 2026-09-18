@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Ugolki (Corners) — Online Multiplayer Web Game</title>
+  <title>Ugolki (Corners) — Classic Strategic Board Game</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e11d48'/><circle cx='50' cy='50' r='30' fill='%23fda4af'/></svg>" />
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,7 +17,7 @@
     body {
       user-select: none;
       -webkit-user-select: none;
-      background-color: #0b0f19;
+      background-color: #070b14;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow-x: hidden;
     }
@@ -28,7 +28,7 @@
     .theme-wood .board-frame {
       border: 10px solid #5c3a21;
       background: linear-gradient(145deg, #7c4d28, #4a2e16);
-      box-shadow: 0 20px 35px -5px rgba(0,0,0,0.65);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);
     }
 
     .theme-slate .sq-light { background-color: #cbd5e1; }
@@ -36,19 +36,19 @@
     .theme-slate .board-frame {
       border: 10px solid #1e293b;
       background: linear-gradient(145deg, #334155, #1e293b);
-      box-shadow: 0 20px 35px -5px rgba(0,0,0,0.65);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);
     }
 
-    /* Tactile Pieces */
+    /* Tactile Checkers Pieces */
     .piece-p1 {
       background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e2e8f0 45%, #94a3b8 100%);
       border: 2px solid #cbd5e1;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
     .piece-p2 {
       background: radial-gradient(circle at 35% 35%, #ef4444 0%, #b91c1c 55%, #7f1d1d 100%);
       border: 2px solid #f87171;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
 
     /* Floating emoji animation */
@@ -60,93 +60,213 @@
     .animate-float-emoji {
       animation: floatUp 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
+
+    /* Chess clock font styling */
+    .chess-clock {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: 0.05em;
+    }
   </style>
 </head>
-<body class="min-h-screen text-slate-100 flex flex-col items-center justify-between p-2 sm:p-5">
+<body class="min-h-screen text-slate-100 flex flex-col justify-between p-2 sm:p-5">
 
   <!-- Floating Emojis Layer -->
   <div id="floating-emojis-container" class="fixed inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden"></div>
 
-  <!-- Top Header -->
-  <header class="w-full max-w-[560px] flex items-center justify-between py-2 border-b border-slate-800/80">
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-400 flex items-center justify-center font-black text-white text-base shadow-md">
-        У
+  <!-- ============================================== -->
+  <!-- 🏠 VIEW 1: HOMEPAGE / MAIN MENU                -->
+  <!-- ============================================== -->
+  <div id="view-home" class="w-full max-w-4xl mx-auto flex-1 flex flex-col justify-between py-4 animate-in fade-in">
+    <!-- Top Brand Header -->
+    <header class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-amber-400 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-rose-950/40">
+          У
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+            Ugolki <span class="text-xs font-bold text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-800/50 uppercase tracking-widest">Corners</span>
+          </h1>
+          <p class="text-xs text-slate-400">Classic Russian Strategic Corners Board Game</p>
+        </div>
       </div>
-      <div>
-        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-1.5">
-          Ugolki <span class="text-[10px] font-semibold text-rose-400 bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-800/50">Corners</span>
-        </h1>
+
+      <div class="flex items-center gap-2">
+        <button onclick="toggleTheme()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold transition">
+          Theme
+        </button>
+        <button onclick="toggleAudio()" id="home-btn-sound" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          Sound: On
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Showcase Section -->
+    <div class="my-auto py-8 flex flex-col items-center text-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs text-amber-300 font-medium mb-4 shadow-sm">
+        <span>⭐ Real-Time Peer-to-Peer & Chess Clocks Enabled</span>
+      </div>
+
+      <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight max-w-xl leading-tight mb-4">
+        Outmaneuver, Jump & Conquer Opponent's Corner
+      </h2>
+      <p class="text-slate-400 text-sm sm:text-base max-w-lg mb-8 leading-relaxed">
+        Play the traditional game of Ugolki online with friends via instant shareable links, challenge the strategic AI, or play local pass-and-play with authentic chess turn timers.
+      </p>
+
+      <!-- Main Play Action Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl text-left">
+        <!-- Card 1: Online Multiplayer -->
+        <div onclick="openOnlineModal()" class="group relative p-6 bg-gradient-to-b from-slate-800/80 to-slate-900/90 border border-emerald-500/40 hover:border-emerald-400 rounded-3xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-950/50 flex flex-col justify-between">
+          <div class="mb-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-3 border border-emerald-500/30 group-hover:scale-110 transition-transform">
+              🌐
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">Online Multiplayer</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Create a room, send a link to a friend, and play peer-to-peer with zero lag and live chess timers.
+            </p>
+          </div>
+          <div class="flex items-center text-xs font-bold text-emerald-400 gap-1 group-hover:translate-x-1 transition-transform">
+            <span>Play with Friend</span> →
+          </div>
+        </div>
+
+        <!-- Card 2: Vs Computer AI -->
+        <div onclick="startAIMatchFromHome()" class="group relative p-6 bg-gradient-to-b from-slate-800/80 to-slate-900/90 border border-rose-500/40 hover:border-rose-400 rounded-3xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-rose-950/50 flex flex-col justify-between">
+          <div class="mb-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl mb-3 border border-rose-500/30 group-hover:scale-110 transition-transform">
+              🤖
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">Single Player vs AI</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Challenge our multi-level AI engine (Easy, Medium, Hard with Minimax tactical search).
+            </p>
+          </div>
+          <div class="flex items-center text-xs font-bold text-rose-400 gap-1 group-hover:translate-x-1 transition-transform">
+            <span>Play Solo</span> →
+          </div>
+        </div>
+
+        <!-- Card 3: Pass & Play -->
+        <div onclick="startPassPlayFromHome()" class="group relative p-6 bg-gradient-to-b from-slate-800/80 to-slate-900/90 border border-amber-500/40 hover:border-amber-400 rounded-3xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-950/50 flex flex-col justify-between">
+          <div class="mb-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-3 border border-amber-500/30 group-hover:scale-110 transition-transform">
+              👥
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">Pass & Play</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              2 players on 1 phone or laptop. Features live chess clock, move undo, and board flipping.
+            </p>
+          </div>
+          <div class="flex items-center text-xs font-bold text-amber-400 gap-1 group-hover:translate-x-1 transition-transform">
+            <span>Local Match</span> →
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Preset & Rules Buttons -->
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <button onclick="toggleRules(true)" class="px-5 py-2.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white rounded-2xl text-xs font-bold transition flex items-center gap-2">
+          <span>📖 How to Play & Rules</span>
+        </button>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <button id="btn-chat-toggle" onclick="toggleChat(true)" class="hidden relative p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
-        💬
-        <span id="chat-unread-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">1</span>
+    <!-- Footer -->
+    <footer class="text-center text-slate-500 text-xs border-t border-slate-800/80 pt-4">
+      Classic Ugolki (Corners) • Orthogonal Steps & Multi-Jumps • Free & Open Source on GitHub
+    </footer>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- 🎮 VIEW 2: ACTIVE GAME BOARD                   -->
+  <!-- ============================================== -->
+  <div id="view-game" class="hidden w-full max-w-[560px] mx-auto flex-1 flex flex-col justify-between py-1 animate-in fade-in">
+    <!-- Top Game Nav -->
+    <div class="w-full flex items-center justify-between py-1 border-b border-slate-800/80 mb-2">
+      <button onclick="goToHome()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition">
+        <span>← Menu</span>
       </button>
 
-      <button onclick="toggleRules(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold transition">
-        Rules
-      </button>
+      <div class="flex items-center gap-2">
+        <span id="active-game-mode-badge" class="text-[11px] font-bold uppercase tracking-wider text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+          Vs AI (Medium)
+        </span>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button id="btn-chat-toggle" onclick="toggleChat(true)" class="hidden relative p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
+          💬
+          <span id="chat-unread-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">1</span>
+        </button>
+        <button onclick="toggleRules(true)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold transition">
+          Rules
+        </button>
+      </div>
     </div>
-  </header>
 
-  <!-- Player Status Cards -->
-  <div class="w-full max-w-[560px] flex flex-col gap-2 mt-2">
-    <!-- Equal turn banner -->
-    <div id="equal-turns-banner" class="hidden bg-amber-500/20 border border-amber-500/50 rounded-xl px-3 py-1.5 text-amber-300 text-xs font-semibold animate-pulse text-center">
+    <!-- Equal turns banner -->
+    <div id="equal-turns-banner" class="hidden bg-amber-500/20 border border-amber-500/50 rounded-xl px-3 py-1.5 text-amber-300 text-xs font-semibold animate-pulse text-center mb-2">
       Equal Turns Rule: Player 1 filled corner! Player 2 gets final move to match for a Draw!
     </div>
 
-    <!-- Online Peer connection status banner -->
-    <div id="peer-status-banner" class="hidden p-2 rounded-xl text-xs font-medium text-center flex items-center justify-between bg-slate-800/90 border border-slate-700">
+    <!-- Online peer connection banner -->
+    <div id="peer-status-banner" class="hidden p-2 rounded-xl text-xs font-medium text-center flex items-center justify-between bg-slate-800/90 border border-slate-700 mb-2">
       <span id="peer-status-text" class="text-slate-300">Connecting to peer...</span>
-      <button onclick="copyRoomLink()" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold rounded">
+      <button onclick="copyRoomLink()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold rounded-lg shadow">
         Copy Invite Link
       </button>
     </div>
 
-    <div class="grid grid-cols-2 gap-3">
-      <!-- Player 1 -->
-      <div id="p1-card" class="p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 transition-all">
-        <div class="flex items-center justify-between mb-1">
+    <!-- Chess Clock & Player Badges (Clean dashboard with NO progress bar!) -->
+    <div class="grid grid-cols-2 gap-3 mb-2">
+      <!-- Player 1 (White) Card -->
+      <div id="p1-card" class="p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 transition-all flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded-full piece-p1"></div>
-            <span id="p1-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[120px]">Player 1 (White)</span>
+            <div class="w-4 h-4 rounded-full piece-p1 flex-shrink-0"></div>
+            <span id="p1-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[105px]">Player 1 (White)</span>
           </div>
           <span id="p1-turn-badge" class="text-[10px] font-bold uppercase bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded shadow">Turn</span>
         </div>
-        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-          <span>Goal:</span>
-          <span id="p1-goal-text" class="font-bold text-slate-200">0/12</span>
-        </div>
-        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-          <div id="p1-progress-bar" class="bg-slate-200 h-full transition-all duration-300" style="width: 0%"></div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] text-slate-400">
+            Goal: <strong id="p1-goal-text" class="text-slate-200 font-bold">0/12</strong>
+          </div>
+          <!-- Digital Chess Clock -->
+          <div id="p1-clock" class="chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white">
+            05:00
+          </div>
         </div>
       </div>
 
-      <!-- Player 2 -->
-      <div id="p2-card" class="p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 transition-all">
-        <div class="flex items-center justify-between mb-1">
+      <!-- Player 2 (Red) Card -->
+      <div id="p2-card" class="p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 transition-all flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded-full piece-p2"></div>
-            <span id="p2-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[120px]">Computer</span>
+            <div class="w-4 h-4 rounded-full piece-p2 flex-shrink-0"></div>
+            <span id="p2-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[105px]">Computer</span>
           </div>
           <span id="p2-turn-badge" class="hidden text-[10px] font-bold uppercase bg-red-500 text-white px-1.5 py-0.5 rounded shadow">Turn</span>
         </div>
-        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-          <span>Goal:</span>
-          <span id="p2-goal-text" class="font-bold text-slate-200">0/12</span>
-        </div>
-        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-          <div id="p2-progress-bar" class="bg-red-500 h-full transition-all duration-300" style="width: 0%"></div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] text-slate-400">
+            Goal: <strong id="p2-goal-text" class="text-slate-200 font-bold">0/12</strong>
+          </div>
+          <!-- Digital Chess Clock -->
+          <div id="p2-clock" class="chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white">
+            05:00
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Match Stats -->
-    <div class="flex justify-between px-2 text-xs text-slate-400">
+    <!-- Match Stats info line -->
+    <div class="flex justify-between px-2 text-xs text-slate-400 mb-1">
       <div class="flex gap-3">
         <span>Mode: <strong id="mode-display" class="text-slate-200 uppercase">3x4</strong></span>
         <span>Round: <strong id="round-display" class="text-slate-200">1</strong></span>
@@ -154,73 +274,71 @@
       </div>
       <span id="ai-status" class="text-amber-400 font-semibold hidden animate-pulse">Thinking...</span>
     </div>
-  </div>
 
-  <!-- Board Container -->
-  <div id="board-container" class="theme-wood my-auto">
-    <div class="board-frame rounded-2xl p-1 shadow-2xl">
-      <div id="grid" class="grid grid-cols-8 grid-rows-8 w-[min(88vw,500px)] h-[min(88vw,500px)] rounded-lg overflow-hidden border border-black/40">
-        <!-- Cells generated by JS -->
+    <!-- The 8x8 Board Container -->
+    <div id="board-container" class="theme-wood my-auto">
+      <div class="board-frame rounded-2xl p-1 shadow-2xl">
+        <div id="grid" class="grid grid-cols-8 grid-rows-8 w-[min(88vw,480px)] h-[min(88vw,480px)] rounded-lg overflow-hidden border border-black/40">
+          <!-- Board squares injected by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls & Options Bar -->
+    <div class="w-full flex flex-col gap-2 mt-2">
+      <!-- In-match options bar (Corner & Clock preset adjustments for offline match) -->
+      <div id="inmatch-offline-bar" class="flex flex-wrap items-center justify-between gap-2 bg-slate-800/60 p-2 rounded-xl border border-slate-700/50 text-xs">
+        <div class="flex items-center gap-1">
+          <span class="text-slate-400 font-medium">Corners:</span>
+          <button onclick="setCornerMode('3x3')" id="btn-corner-3x3" class="px-2 py-0.5 rounded font-bold text-slate-400">3x3</button>
+          <button onclick="setCornerMode('3x4')" id="btn-corner-3x4" class="px-2 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">3x4</button>
+          <button onclick="setCornerMode('4x4')" id="btn-corner-4x4" class="px-2 py-0.5 rounded font-bold text-slate-400">4x4</button>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <span class="text-slate-400 font-medium">Clock:</span>
+          <button onclick="setChessClockPreset(60)" id="btn-clock-1" class="px-1.5 py-0.5 rounded font-bold text-slate-400">1m</button>
+          <button onclick="setChessClockPreset(180)" id="btn-clock-3" class="px-1.5 py-0.5 rounded font-bold text-slate-400">3m</button>
+          <button onclick="setChessClockPreset(300)" id="btn-clock-5" class="px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">5m</button>
+          <button onclick="setChessClockPreset(600)" id="btn-clock-10" class="px-1.5 py-0.5 rounded font-bold text-slate-400">10m</button>
+          <button onclick="setChessClockPreset(0)" id="btn-clock-inf" class="px-1.5 py-0.5 rounded font-bold text-slate-400">∞</button>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5">
+          <button onclick="undoMove()" id="btn-undo" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition disabled:opacity-40" disabled>
+            Undo
+          </button>
+          <button onclick="handleNewGameClick()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+            New Game
+          </button>
+          <button onclick="resignMatch()" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-950/50 border border-slate-700 text-rose-400 rounded-xl text-xs font-semibold transition">
+            Resign
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="toggleFlip()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+            Flip
+          </button>
+          <button onclick="toggleTheme()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+            Theme
+          </button>
+          <button onclick="toggleAudio()" id="game-btn-sound" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+            Sound: On
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Controls Panel -->
-  <div class="w-full max-w-[560px] flex flex-col gap-2 mb-1">
-    <!-- Mode Switcher Tabs -->
-    <div class="flex items-center justify-between gap-1 p-1 bg-slate-800/80 rounded-xl border border-slate-700/60 text-xs">
-      <button id="btn-mode-ai" onclick="switchGameMode('ai')" class="flex-1 py-1.5 rounded-lg font-bold bg-rose-600 text-white shadow">Vs AI</button>
-      <button id="btn-mode-pass" onclick="switchGameMode('pass')" class="flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">Pass & Play</button>
-      <button id="btn-mode-online" onclick="openOnlineModal()" class="flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-emerald-300">🌐 Online Play</button>
-    </div>
 
-    <!-- Options Sub-bar (offline modes only) -->
-    <div id="offline-options" class="flex flex-wrap items-center justify-between gap-2 bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/40 text-xs">
-      <div class="flex items-center gap-1">
-        <span class="text-slate-400 px-1 font-medium">Corner:</span>
-        <button onclick="setCornerMode('3x3')" id="btn-corner-3x3" class="px-2 py-0.5 rounded font-bold text-slate-400">3x3</button>
-        <button onclick="setCornerMode('3x4')" id="btn-corner-3x4" class="px-2 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">3x4</button>
-        <button onclick="setCornerMode('4x4')" id="btn-corner-4x4" class="px-2 py-0.5 rounded font-bold text-slate-400">4x4</button>
-      </div>
-
-      <div id="ai-diff-container" class="flex items-center gap-1">
-        <span class="text-slate-400 px-1 font-medium">AI:</span>
-        <button onclick="setAIDifficulty('easy')" id="btn-ai-easy" class="px-1.5 py-0.5 rounded font-bold text-slate-400">Easy</button>
-        <button onclick="setAIDifficulty('medium')" id="btn-ai-medium" class="px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">Med</button>
-        <button onclick="setAIDifficulty('hard')" id="btn-ai-hard" class="px-1.5 py-0.5 rounded font-bold text-slate-400">Hard</button>
-      </div>
-    </div>
-
-    <!-- Action Bar -->
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <button onclick="undoMove()" id="btn-undo" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition disabled:opacity-40" disabled>
-          Undo
-        </button>
-        <button onclick="handleNewGameClick()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
-          New Game
-        </button>
-        <button onclick="resignMatch()" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-950/50 border border-slate-700 text-rose-400 rounded-xl text-xs font-semibold transition">
-          Resign
-        </button>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <button onclick="toggleFlip()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
-          Flip
-        </button>
-        <button onclick="toggleTheme()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
-          Theme
-        </button>
-        <button onclick="toggleAudio()" id="btn-sound" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
-          Sound: On
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Online Multiplayer Modal (WebRTC Peer-to-Peer) -->
-  <div id="modal-online" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+  <!-- ============================================== -->
+  <!-- 🌐 MODAL: ONLINE MULTIPLAYER (WEBRTC P2P)      -->
+  <!-- ============================================== -->
+  <div id="modal-online" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <h3 class="text-base font-bold text-white flex items-center gap-2">🌐 Online Multiplayer (P2P)</h3>
@@ -247,6 +365,17 @@
             <button onclick="setHostCorner('3x3')" id="btn-host-3x3" class="py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">3x3 (9 pcs)</button>
             <button onclick="setHostCorner('3x4')" id="btn-host-3x4" class="py-2 rounded-xl border border-emerald-500 bg-emerald-600/20 text-xs font-bold text-emerald-300">3x4 (12 pcs)</button>
             <button onclick="setHostCorner('4x4')" id="btn-host-4x4" class="py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">4x4 (16 pcs)</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-400 font-semibold block mb-1">Chess Clock (Per Player)</label>
+          <div class="grid grid-cols-5 gap-1.5">
+            <button onclick="setHostClock(60)" id="btn-host-clock-1" class="py-1.5 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">1m</button>
+            <button onclick="setHostClock(180)" id="btn-host-clock-3" class="py-1.5 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">3m</button>
+            <button onclick="setHostClock(300)" id="btn-host-clock-5" class="py-1.5 rounded-xl border border-emerald-500 bg-emerald-600/20 text-xs font-bold text-emerald-300">5m</button>
+            <button onclick="setHostClock(600)" id="btn-host-clock-10" class="py-1.5 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">10m</button>
+            <button onclick="setHostClock(0)" id="btn-host-clock-0" class="py-1.5 rounded-xl border border-slate-700 text-xs font-bold text-slate-300">∞</button>
           </div>
         </div>
 
@@ -281,8 +410,11 @@
     </div>
   </div>
 
-  <!-- Chat & Emoji Modal -->
-  <div id="modal-chat" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+
+  <!-- ============================================== -->
+  <!-- 💬 MODAL: IN-GAME CHAT & REACTIONS             -->
+  <!-- ============================================== -->
+  <div id="modal-chat" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-sm h-[450px] shadow-2xl flex flex-col overflow-hidden">
       <div class="flex justify-between items-center px-4 py-3 border-b border-slate-800">
         <h4 class="font-bold text-sm text-white">In-Game Chat</h4>
@@ -320,8 +452,11 @@
     </div>
   </div>
 
-  <!-- Game Over Modal -->
-  <div id="modal-gameover" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+
+  <!-- ============================================== -->
+  <!-- 🏆 MODAL: GAME OVER                            -->
+  <!-- ============================================== -->
+  <div id="modal-gameover" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl flex flex-col items-center">
       <div id="gameover-trophy" class="w-16 h-16 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-3xl mb-3">
         🏆
@@ -335,29 +470,32 @@
       </div>
 
       <div class="flex gap-2 w-full">
-        <button onclick="handleRematch()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg text-xs">
+        <button onclick="handleRematch()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg text-xs font-bold">
           Play Again
         </button>
         <button onclick="toggleGameOver(false)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
-          Close
+          View Board
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Rules Modal -->
-  <div id="modal-rules" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+
+  <!-- ============================================== -->
+  <!-- 📖 MODAL: RULES TUTORIAL                       -->
+  <!-- ============================================== -->
+  <div id="modal-rules" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-300 text-xs leading-relaxed max-h-[85vh] overflow-y-auto">
       <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2">📖 How to Play Ugolki (Corners)</h2>
 
       <div class="space-y-3">
         <div>
           <strong class="text-amber-400 block text-sm">1. The Goal</strong>
-          Move all your pieces across the board into the opponent's starting corner.
+          Move all your pieces across the 8x8 board into the opponent's starting corner.
         </div>
         <div>
-          <strong class="text-emerald-400 block text-sm">2. Moving</strong>
-          Pieces move <strong>orthogonally</strong> (Up, Down, Left, Right). No diagonal moves allowed!
+          <strong class="text-emerald-400 block text-sm">2. Orthogonal Movement</strong>
+          Pieces move <strong>orthogonally</strong> (Up, Down, Left, Right). Diagonal moves are strictly forbidden!
           <ul class="list-disc list-inside mt-1 space-y-0.5 text-slate-400">
             <li><strong>Step:</strong> Move 1 square into adjacent empty cell.</li>
             <li><strong>Jump:</strong> Jump over an adjacent piece into the empty square directly behind it.</li>
@@ -365,24 +503,28 @@
         </div>
         <div>
           <strong class="text-cyan-400 block text-sm">3. Multi-Jumps (The Core Strategy!)</strong>
-          You can chain multiple jumps together in a single turn to fly all the way across the board! You may stop at any jump landing.
+          You can chain multiple jumps together in a single turn to fly all the way across the board! You may stop at any intermediate jump landing.
         </div>
         <div>
-          <strong class="text-purple-400 block text-sm">4. Equal Turns Rule</strong>
-          Player 1 moves first. If Player 1 finishes, Player 2 gets one final turn to match. If both finish on that turn, it is an honorable <strong>Draw</strong>!
+          <strong class="text-purple-400 block text-sm">4. Chess Clocks & Equal Turns Rule</strong>
+          Just like chess, each player has a bank of time that counts down only on their turn. If a player runs out of time, they lose! Also, if Player 1 reaches the goal first, Player 2 receives one final turn to match for an honorable <strong>Draw</strong>.
         </div>
         <div>
           <strong class="text-rose-400 block text-sm">5. Anti-Camping</strong>
-          Vacate your starting corner within the round limit (20-30 moves).
+          Vacate your home corner within the round limit (20-30 moves).
         </div>
       </div>
 
       <button onclick="toggleRules(false)" class="mt-5 w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-xl transition">
-        Got it!
+        Got it, Let's Play!
       </button>
     </div>
   </div>
 
+
+  <!-- ============================================== -->
+  <!-- ⚙️ CORE GAME JAVASCRIPT ENGINE                -->
+  <!-- ============================================== -->
   <script>
     // --- Audio Synthesizer (Web Audio API) ---
     let audioEnabled = true;
@@ -436,12 +578,19 @@
     let flipped = false;
     let gameOver = false;
 
-    // Online P2P Variables
+    // --- Chess Clock Variables ---
+    let chessClockPreset = 300; // 5 minutes default (0 = unlimited)
+    let p1Time = 300;
+    let p2Time = 300;
+    let clockTimer = null;
+
+    // --- WebRTC Peer-to-Peer Online Variables ---
     let peer = null;
     let peerConn = null;
     let myPlayerNum = 1; // 1 = host, 2 = guest
     let activeRoomCode = null;
     let hostCornerChoice = '3x4';
+    let hostClockChoice = 300;
     let unreadChat = 0;
 
     const DIRS = [
@@ -462,7 +611,132 @@
       return mode === '3x3' ? 9 : mode === '3x4' ? 12 : 16;
     }
 
+    // --- View Navigation ---
+    function goToHome() {
+      stopClock();
+      document.getElementById('view-home').classList.remove('hidden');
+      document.getElementById('view-game').classList.add('hidden');
+    }
+
+    function goToGame() {
+      document.getElementById('view-home').classList.add('hidden');
+      document.getElementById('view-game').classList.remove('hidden');
+    }
+
+    function startAIMatchFromHome() {
+      gameMode = 'ai';
+      document.getElementById('active-game-mode-badge').textContent = `Vs AI (${aiDifficulty})`;
+      document.getElementById('inmatch-offline-bar').classList.remove('hidden');
+      document.getElementById('btn-chat-toggle').classList.add('hidden');
+      document.getElementById('peer-status-banner').classList.add('hidden');
+      document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
+      document.getElementById('p2-name-label').textContent = `Computer (${aiDifficulty})`;
+      flipped = false;
+      goToGame();
+      initGame();
+    }
+
+    function startPassPlayFromHome() {
+      gameMode = 'pass';
+      document.getElementById('active-game-mode-badge').textContent = 'Pass & Play';
+      document.getElementById('inmatch-offline-bar').classList.remove('hidden');
+      document.getElementById('btn-chat-toggle').classList.add('hidden');
+      document.getElementById('peer-status-banner').classList.add('hidden');
+      document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
+      document.getElementById('p2-name-label').textContent = 'Player 2 (Red)';
+      flipped = false;
+      goToGame();
+      initGame();
+    }
+
+    function formatTime(seconds) {
+      if (chessClockPreset === 0) return '∞';
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // --- Chess Clock Ticker ---
+    function startClock() {
+      stopClock();
+      if (chessClockPreset === 0 || gameOver) return;
+
+      clockTimer = setInterval(() => {
+        if (gameOver) return;
+
+        if (currentTurn === 1) {
+          p1Time = Math.max(0, p1Time - 1);
+          updateClocksDisplay();
+          if (p1Time <= 0) {
+            handleTimeout(1);
+          }
+        } else {
+          p2Time = Math.max(0, p2Time - 1);
+          updateClocksDisplay();
+          if (p2Time <= 0) {
+            handleTimeout(2);
+          }
+        }
+      }, 1000);
+    }
+
+    function stopClock() {
+      if (clockTimer) {
+        clearInterval(clockTimer);
+        clockTimer = null;
+      }
+    }
+
+    function handleTimeout(timedOutPlayer) {
+      stopClock();
+      gameOver = true;
+      const winner = timedOutPlayer === 1 ? 2 : 1;
+      const timedOutName = timedOutPlayer === 1 ? document.getElementById('p1-name-label').textContent : document.getElementById('p2-name-label').textContent;
+      showGameOver({
+        winner,
+        reason: `${timedOutName} ran out of time on the chess clock!`
+      });
+    }
+
+    function updateClocksDisplay() {
+      const p1Elem = document.getElementById('p1-clock');
+      const p2Elem = document.getElementById('p2-clock');
+
+      p1Elem.textContent = formatTime(p1Time);
+      p2Elem.textContent = formatTime(p2Time);
+
+      // Low time warning style
+      if (chessClockPreset > 0 && p1Time <= 20) {
+        p1Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-rose-950/80 border border-rose-500 text-rose-300 animate-pulse';
+      } else {
+        p1Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white';
+      }
+
+      if (chessClockPreset > 0 && p2Time <= 20) {
+        p2Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-rose-950/80 border border-rose-500 text-rose-300 animate-pulse';
+      } else {
+        p2Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white';
+      }
+    }
+
+    function setChessClockPreset(seconds) {
+      chessClockPreset = seconds;
+      p1Time = seconds;
+      p2Time = seconds;
+
+      [60, 180, 300, 600, 0].forEach(s => {
+        const id = s === 60 ? 'btn-clock-1' : s === 180 ? 'btn-clock-3' : s === 300 ? 'btn-clock-5' : s === 600 ? 'btn-clock-10' : 'btn-clock-inf';
+        const elem = document.getElementById(id);
+        if (elem) {
+          elem.className = s === seconds ? 'px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow' : 'px-1.5 py-0.5 rounded font-bold text-slate-400';
+        }
+      });
+
+      initGame();
+    }
+
     function initGame() {
+      stopClock();
       board = Array(8).fill(0).map(() => Array(8).fill(0));
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -478,8 +752,13 @@
       legalMoves = [];
       history = [];
       gameOver = false;
+      p1Time = chessClockPreset;
+      p2Time = chessClockPreset;
+
       document.getElementById('equal-turns-banner').classList.add('hidden');
+      updateClocksDisplay();
       render();
+      startClock();
     }
 
     function getMovesForPiece(r, c) {
@@ -560,7 +839,9 @@
         currentTurn,
         roundNumber,
         moveCount,
-        p1FinishedAtRound
+        p1FinishedAtRound,
+        p1Time,
+        p2Time
       });
 
       const p = board[move.from.r][move.from.c];
@@ -573,18 +854,25 @@
       moveCount++;
       const result = checkWin();
 
-      // If playing online and local move, send to peer
+      // If playing online and local move, sync move & clocks
       if (gameMode === 'online' && !isRemote && peerConn) {
-        peerConn.send({ type: 'MOVE', move });
+        peerConn.send({
+          type: 'MOVE',
+          move,
+          p1Time,
+          p2Time
+        });
       }
 
       if (result) {
+        stopClock();
         gameOver = true;
         render();
         showGameOver(result);
         return;
       }
 
+      // Turn switches -> clock switches to opponent!
       currentTurn = currentTurn === 1 ? 2 : 1;
       if (currentTurn === 1) roundNumber++;
       selectedPos = null;
@@ -661,7 +949,7 @@
           const cell = document.createElement('div');
           cell.className = `relative flex items-center justify-center cursor-pointer transition-colors ${isDark ? 'sq-dark' : 'sq-light'}`;
 
-          // Corners
+          // Subtle home corners dashes
           if (isP1Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-white/40 pointer-events-none rounded"></div>`;
           if (isP2Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-red-500/50 pointer-events-none rounded"></div>`;
 
@@ -673,7 +961,7 @@
             cell.appendChild(pieceDiv);
           }
 
-          // Legal Move Landing
+          // Legal Move Landing Dot / Hop Badge
           if (move) {
             const dest = document.createElement('div');
             dest.className = 'absolute inset-0 flex items-center justify-center pointer-events-none z-10';
@@ -716,8 +1004,6 @@
 
       document.getElementById('p1-goal-text').textContent = `${p1In}/${total}`;
       document.getElementById('p2-goal-text').textContent = `${p2In}/${total}`;
-      document.getElementById('p1-progress-bar').style.width = `${Math.round((p1In/total)*100)}%`;
-      document.getElementById('p2-progress-bar').style.width = `${Math.round((p2In/total)*100)}%`;
 
       document.getElementById('round-display').textContent = roundNumber;
       document.getElementById('moves-display').textContent = moveCount;
@@ -727,13 +1013,15 @@
       document.getElementById('p1-turn-badge').className = p1Turn ? 'text-[10px] font-bold uppercase bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded shadow' : 'hidden';
       document.getElementById('p2-turn-badge').className = !p1Turn ? 'text-[10px] font-bold uppercase bg-red-500 text-white px-1.5 py-0.5 rounded shadow' : 'hidden';
 
-      document.getElementById('p1-card').className = p1Turn ? 'p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 shadow-lg ring-2 ring-amber-400/40' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80';
-      document.getElementById('p2-card').className = !p1Turn ? 'p-3 rounded-2xl border border-red-500/80 bg-slate-800/90 shadow-lg ring-2 ring-red-500/40' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80';
+      document.getElementById('p1-card').className = p1Turn ? 'p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 shadow-lg ring-2 ring-amber-400/40 flex flex-col justify-between' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 flex flex-col justify-between';
+      document.getElementById('p2-card').className = !p1Turn ? 'p-3 rounded-2xl border border-red-500/80 bg-slate-800/90 shadow-lg ring-2 ring-red-500/40 flex flex-col justify-between' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 flex flex-col justify-between';
 
       document.getElementById('btn-undo').disabled = history.length === 0 || gameMode === 'online';
+      updateClocksDisplay();
     }
 
     function showGameOver(res) {
+      stopClock();
       if (res.winner === 1 || res.winner === 'draw') playVictorySound();
       if (window.confetti && (res.winner === 1 || res.winner === 2)) {
         confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
@@ -776,6 +1064,8 @@
         roundNumber = state.roundNumber;
         moveCount = state.moveCount;
         p1FinishedAtRound = state.p1FinishedAtRound;
+        p1Time = state.p1Time;
+        p2Time = state.p2Time;
         selectedPos = null;
         legalMoves = [];
         render();
@@ -812,38 +1102,12 @@
       }
     }
 
-    function switchGameMode(mode) {
-      if (mode === 'online') {
-        openOnlineModal();
-        return;
-      }
-      gameMode = mode;
-      document.getElementById('btn-mode-ai').className = mode === 'ai' ? 'flex-1 py-1.5 rounded-lg font-bold bg-rose-600 text-white shadow' : 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
-      document.getElementById('btn-mode-pass').className = mode === 'pass' ? 'flex-1 py-1.5 rounded-lg font-bold bg-rose-600 text-white shadow' : 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
-      document.getElementById('btn-mode-online').className = 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-emerald-300';
-      document.getElementById('offline-options').classList.remove('hidden');
-      document.getElementById('ai-diff-container').style.display = mode === 'ai' ? 'flex' : 'none';
-      document.getElementById('btn-chat-toggle').classList.add('hidden');
-      document.getElementById('peer-status-banner').classList.add('hidden');
-      document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
-      document.getElementById('p2-name-label').textContent = mode === 'ai' ? 'Computer' : 'Player 2 (Red)';
-      flipped = false;
-      initGame();
-    }
-
     function setCornerMode(mode) {
       cornerMode = mode;
       ['3x3', '3x4', '4x4'].forEach(m => {
         document.getElementById(`btn-corner-${m}`).className = m === mode ? 'px-2 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow' : 'px-2 py-0.5 rounded font-bold text-slate-400';
       });
       initGame();
-    }
-
-    function setAIDifficulty(diff) {
-      aiDifficulty = diff;
-      ['easy', 'medium', 'hard'].forEach(d => {
-        document.getElementById(`btn-ai-${d}`).className = d === diff ? 'px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow' : 'px-1.5 py-0.5 rounded font-bold text-slate-400';
-      });
     }
 
     function toggleFlip() {
@@ -859,12 +1123,14 @@
 
     function toggleAudio() {
       audioEnabled = !audioEnabled;
-      document.getElementById('btn-sound').textContent = `Sound: ${audioEnabled ? 'On' : 'Off'}`;
+      const text = `Sound: ${audioEnabled ? 'On' : 'Off'}`;
+      document.getElementById('game-btn-sound').textContent = text;
+      document.getElementById('home-btn-sound').textContent = text;
     }
 
-    // ==========================================
-    // --- WebRTC Peer-to-Peer Online Engine ---
-    // ==========================================
+    // ==============================================
+    // --- WebRTC Peer-to-Peer Online Multiplayer ---
+    // ==============================================
     function openOnlineModal() {
       document.getElementById('modal-online').classList.remove('hidden');
     }
@@ -888,6 +1154,17 @@
       });
     }
 
+    function setHostClock(sec) {
+      hostClockChoice = sec;
+      [60, 180, 300, 600, 0].forEach(s => {
+        const id = `btn-host-clock-${s === 60 ? 1 : s === 180 ? 3 : s === 300 ? 5 : s === 600 ? 10 : 0}`;
+        const elem = document.getElementById(id);
+        if (elem) {
+          elem.className = s === sec ? 'py-1.5 rounded-xl border border-emerald-500 bg-emerald-600/20 text-xs font-bold text-emerald-300' : 'py-1.5 rounded-xl border border-slate-700 text-xs font-bold text-slate-300';
+        }
+      });
+    }
+
     function genRoomCode() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       let res = '';
@@ -902,6 +1179,7 @@
       myPlayerNum = 1;
       flipped = false;
       cornerMode = hostCornerChoice;
+      chessClockPreset = hostClockChoice;
 
       document.getElementById('btn-start-host').disabled = true;
       document.getElementById('btn-start-host').textContent = 'Creating room...';
@@ -924,7 +1202,7 @@
       });
 
       peer.on('error', err => {
-        alert('Room creation error: ' + err.type);
+        alert('Room creation notice: ' + err.type);
         document.getElementById('btn-start-host').disabled = false;
         document.getElementById('btn-start-host').textContent = 'Generate Room & Invite Link';
       });
@@ -953,7 +1231,6 @@
         conn.on('open', () => {
           toggleOnlineModal(false);
           setupPeerConnectionHandlers(conn, myName);
-          // Send handshake
           conn.send({ type: 'HANDSHAKE', name: myName });
           setOnlineGameActive(code, 'Opponent', `${myName} (You)`);
         });
@@ -970,10 +1247,10 @@
       conn.on('data', data => {
         if (data.type === 'HANDSHAKE') {
           if (myPlayerNum === 1) {
-            // Host sends initial game configuration & board to guest
             conn.send({
               type: 'INIT_STATE',
               cornerMode,
+              chessClockPreset,
               hostName: myName,
               guestName: data.name
             });
@@ -985,11 +1262,14 @@
           }
         } else if (data.type === 'INIT_STATE') {
           cornerMode = data.cornerMode;
+          chessClockPreset = data.chessClockPreset;
           document.getElementById('p1-name-label').textContent = data.hostName;
           document.getElementById('p2-name-label').textContent = `${data.guestName} (You)`;
           document.getElementById('peer-status-text').textContent = `Connected with ${data.hostName}!`;
           initGame();
         } else if (data.type === 'MOVE') {
+          if (data.p1Time !== undefined) p1Time = data.p1Time;
+          if (data.p2Time !== undefined) p2Time = data.p2Time;
           executeMove(data.move, true);
         } else if (data.type === 'REMATCH') {
           initGame();
@@ -1010,15 +1290,14 @@
 
     function setOnlineGameActive(code, p1Name, p2Name) {
       gameMode = 'online';
-      document.getElementById('btn-mode-ai').className = 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
-      document.getElementById('btn-mode-pass').className = 'flex-1 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white';
-      document.getElementById('btn-mode-online').className = 'flex-1 py-1.5 rounded-lg font-bold bg-emerald-600 text-white shadow';
-      document.getElementById('offline-options').classList.add('hidden');
+      document.getElementById('active-game-mode-badge').textContent = `Online P2P (${code})`;
+      document.getElementById('inmatch-offline-bar').classList.add('hidden');
       document.getElementById('btn-chat-toggle').classList.remove('hidden');
       document.getElementById('peer-status-banner').classList.remove('hidden');
-      document.getElementById('peer-status-text').textContent = `Room Code: ${code}`;
+      document.getElementById('peer-status-text').textContent = `Room: ${code}`;
       document.getElementById('p1-name-label').textContent = p1Name;
       document.getElementById('p2-name-label').textContent = p2Name;
+      goToGame();
     }
 
     function copyRoomLink() {
@@ -1078,7 +1357,7 @@
       }
     }
 
-    // Auto-check URL query param: e.g. ?join=ABCDEF
+    // Check if opened via shareable invite URL (?join=CODE)
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const joinCode = params.get('join');
@@ -1087,7 +1366,6 @@
         setOnlineTab('join');
         document.getElementById('input-join-code').value = joinCode.toUpperCase();
       }
-      initGame();
     });
   </script>
 </body>

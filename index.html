@@ -318,13 +318,22 @@
           <button onclick="setCornerMode('4x4')" id="btn-corner-4x4" class="px-2 py-0.5 rounded font-bold text-slate-400">4x4</button>
         </div>
 
-        <div class="flex items-center gap-1">
+        <!-- Clock Presets (Pass & Play only) -->
+        <div id="box-clock-presets" class="flex items-center gap-1">
           <span class="text-slate-400 font-medium">Clock:</span>
           <button onclick="setChessClockPreset(60)" id="btn-clock-1" class="px-1.5 py-0.5 rounded font-bold text-slate-400">1m</button>
           <button onclick="setChessClockPreset(180)" id="btn-clock-3" class="px-1.5 py-0.5 rounded font-bold text-slate-400">3m</button>
           <button onclick="setChessClockPreset(300)" id="btn-clock-5" class="px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">5m</button>
           <button onclick="setChessClockPreset(600)" id="btn-clock-10" class="px-1.5 py-0.5 rounded font-bold text-slate-400">10m</button>
           <button onclick="setChessClockPreset(0)" id="btn-clock-inf" class="px-1.5 py-0.5 rounded font-bold text-slate-400">∞</button>
+        </div>
+
+        <!-- AI Difficulty selector (AI mode only) -->
+        <div id="box-ai-diff-presets" class="hidden flex items-center gap-1">
+          <span class="text-slate-400 font-medium">AI:</span>
+          <button onclick="setAIDifficulty('easy')" id="btn-ai-easy" class="px-1.5 py-0.5 rounded font-bold text-slate-400">Easy</button>
+          <button onclick="setAIDifficulty('medium')" id="btn-ai-medium" class="px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow">Medium</button>
+          <button onclick="setAIDifficulty('hard')" id="btn-ai-hard" class="px-1.5 py-0.5 rounded font-bold text-slate-400">Hard</button>
         </div>
       </div>
 
@@ -630,6 +639,7 @@
     let cornerMode = '3x4';
     let gameMode = 'ai'; // 'ai' | 'pass' | 'online'
     let aiDifficulty = 'medium';
+    let aiRecentMoves = [];
     let theme = 'wood';
     let flipped = false;
     let gameOver = false;
@@ -694,12 +704,15 @@
       p1Wins = 0; p2Wins = 0; draws = 0;
       updateScoreDisplay();
       document.getElementById('inmatch-offline-bar').classList.remove('hidden');
+      document.getElementById('box-clock-presets').classList.add('hidden');
+      document.getElementById('box-ai-diff-presets').classList.remove('hidden');
       document.getElementById('inmatch-online-chat').classList.add('hidden');
       document.getElementById('btn-chat-toggle').classList.add('hidden');
       document.getElementById('peer-status-banner').classList.add('hidden');
       document.getElementById('btn-new-game').classList.remove('hidden');
       document.getElementById('p1-name-label').textContent = 'You (White)';
-      document.getElementById('p2-name-label').textContent = `Computer (${aiDifficulty})`;
+      document.getElementById('p2-name-label').textContent = `Computer (${aiDifficulty.charAt(0).toUpperCase() + aiDifficulty.slice(1)})`;
+      setAIDifficulty(aiDifficulty);
       flipped = false;
       goToGame();
       initGame();
@@ -710,6 +723,8 @@
       p1Wins = 0; p2Wins = 0; draws = 0;
       updateScoreDisplay();
       document.getElementById('inmatch-offline-bar').classList.remove('hidden');
+      document.getElementById('box-clock-presets').classList.remove('hidden');
+      document.getElementById('box-ai-diff-presets').classList.add('hidden');
       document.getElementById('inmatch-online-chat').classList.add('hidden');
       document.getElementById('btn-chat-toggle').classList.add('hidden');
       document.getElementById('peer-status-banner').classList.add('hidden');
@@ -719,6 +734,21 @@
       flipped = false;
       goToGame();
       initGame();
+    }
+
+    function setAIDifficulty(diff) {
+      aiDifficulty = diff;
+      ['easy', 'medium', 'hard'].forEach(d => {
+        const btn = document.getElementById(`btn-ai-${d}`);
+        if (btn) {
+          btn.className = d === diff 
+            ? 'px-1.5 py-0.5 rounded font-bold bg-amber-500 text-slate-900 shadow' 
+            : 'px-1.5 py-0.5 rounded font-bold text-slate-400 hover:text-white';
+        }
+      });
+      if (gameMode === 'ai') {
+        document.getElementById('p2-name-label').textContent = `Computer (${diff.charAt(0).toUpperCase() + diff.slice(1)})`;
+      }
     }
 
     function updateScoreDisplay() {
@@ -744,7 +774,7 @@
     // --- Chess Clock Ticker ---
     function startClock() {
       stopClock();
-      if (chessClockPreset === 0 || gameOver) return;
+      if (gameMode === 'ai' || chessClockPreset === 0 || gameOver) return;
 
       clockTimer = setInterval(() => {
         if (gameOver) return;
@@ -786,6 +816,15 @@
     function updateClocksDisplay() {
       const p1Elem = document.getElementById('p1-clock');
       const p2Elem = document.getElementById('p2-clock');
+
+      if (gameMode === 'ai') {
+        p1Elem.classList.add('hidden');
+        p2Elem.classList.add('hidden');
+        return;
+      }
+
+      p1Elem.classList.remove('hidden');
+      p2Elem.classList.remove('hidden');
 
       p1Elem.textContent = formatTime(p1Time);
       p2Elem.textContent = formatTime(p2Time);
@@ -835,6 +874,7 @@
       selectedPos = null;
       illegalSquare = null;
       lastMove = null;
+      aiRecentMoves = [];
       rematchVotes.clear();
       history = [];
       gameOver = false;
@@ -995,6 +1035,102 @@
       }
     }
 
+    function evaluateAIMove(m, roundNum) {
+      const fr = m.from.r, fc = m.from.c;
+      const tr = m.to.r, tc = m.to.c;
+      const wasInTarget = isInsideCorner(fr, fc, 2, cornerMode, true);
+      const isInTarget = isInsideCorner(tr, tc, 2, cornerMode, true);
+      const wasInHome = isInsideCorner(fr, fc, 2, cornerMode, false);
+      const isInHome = isInsideCorner(tr, tc, 2, cornerMode, false);
+
+      // 1. Target Corner Rules
+      if (wasInTarget) {
+        if (!isInTarget) {
+          return -99999; // NEVER leave target corner
+        }
+        // Inside target corner: MUST move deeper into target (lower r + c)
+        if ((tr + tc) >= (fr + fc)) {
+          return -50000; // Strictly forbid sideways or backward shuffling inside goal
+        }
+        return 500 + (10 - (tr + tc)) * 30;
+      }
+
+      // Moving into target corner from outside
+      if (isInTarget) {
+        return 400 + (10 - (tr + tc)) * 25;
+      }
+
+      // Never move back into starting home corner
+      if (isInHome && !wasInHome) {
+        return -30000;
+      }
+
+      // Find currently empty target corner squares
+      const targetSquares = [];
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (isInsideCorner(r, c, 2, cornerMode, true)) {
+            targetSquares.push({ r, c });
+          }
+        }
+      }
+      const emptyTargets = targetSquares.filter(sq => board[sq.r][sq.c] === 0);
+      const targetsToEvaluate = emptyTargets.length > 0 ? emptyTargets : [{ r: 0, c: 0 }];
+
+      // Progress towards closest empty target square
+      const oldMinDist = Math.min(...targetsToEvaluate.map(t => Math.abs(fr - t.r) + Math.abs(fc - t.c)));
+      const newMinDist = Math.min(...targetsToEvaluate.map(t => Math.abs(tr - t.r) + Math.abs(tc - t.c)));
+      const progress = oldMinDist - newMinDist;
+
+      let score = progress * 20;
+
+      // Multi-jump bonus
+      if (m.isJump) {
+        score += m.hops * 15;
+      }
+
+      // Home corner eviction bonus
+      if (wasInHome && !isInHome) {
+        score += 80;
+      } else if (wasInHome) {
+        score += Math.min(roundNum * 6, 90);
+      }
+
+      // Straggler bonus: heavily accelerate pieces that are furthest from target
+      const outsidePieces = [];
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (board[r][c] === 2 && !isInsideCorner(r, c, 2, cornerMode, true)) {
+            outsidePieces.push(r + c);
+          }
+        }
+      }
+      if (outsidePieces.length > 0) {
+        const maxDist = Math.max(...outsidePieces);
+        if ((fr + fc) >= maxDist - 1 && progress > 0) {
+          score += progress * 25 + 75;
+        }
+      }
+
+      // Anti-repetition & oscillation shield
+      if (aiRecentMoves.length > 0) {
+        const last = aiRecentMoves[aiRecentMoves.length - 1];
+        // Immediate reversal: piece stepping back to where it just was
+        if (last.from.r === tr && last.from.c === tc && last.to.r === fr && last.to.c === fc) {
+          score -= 50000;
+        }
+        // Cycle repetition: repeated move from last 6 AI moves
+        const recentSub = aiRecentMoves.slice(-6);
+        for (const prev of recentSub) {
+          if (prev.from.r === fr && prev.from.c === fc && prev.to.r === tr && prev.to.c === tc) {
+            score -= 25000;
+          }
+        }
+      }
+
+      return score;
+    }
+
     function triggerAI() {
       document.getElementById('ai-status').classList.remove('hidden');
       setTimeout(() => {
@@ -1004,32 +1140,74 @@
             if (board[r][c] === 2) moves.push(...getMovesForPiece(r, c));
           }
         }
-        if (moves.length === 0) return;
+        if (moves.length === 0) {
+          document.getElementById('ai-status').classList.add('hidden');
+          return;
+        }
 
-        const targetR = 0, targetC = 0;
-        let bestMove = moves[0];
-        let bestScore = -9999;
-
-        for (const m of moves) {
-          const oldDist = Math.abs(m.from.r - targetR) + Math.abs(m.from.c - targetC);
-          const newDist = Math.abs(m.to.r - targetR) + Math.abs(m.to.c - targetC);
-          let score = (oldDist - newDist) * 10;
-          if (m.isJump) score += m.hops * 4;
-
-          const isTarget = isInsideCorner(m.to.r, m.to.c, 2, cornerMode, true);
-          if (isTarget) score += 35;
-
+        let scoredMoves = moves.map(m => {
+          let score = evaluateAIMove(m, roundNumber);
           if (aiDifficulty === 'easy') {
-            score += Math.random() * 14 - 7;
-          } else if (aiDifficulty === 'hard') {
-            score += (14 - (m.to.r + m.to.c)) * 4;
+            score += (Math.random() * 40 - 20);
           }
+          return { move: m, score };
+        });
 
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = m;
+        scoredMoves.sort((a, b) => b.score - a.score);
+
+        let bestMove = scoredMoves[0].move;
+
+        // Hard difficulty: Minimax lookahead on top candidate moves
+        if (aiDifficulty === 'hard' && scoredMoves.length > 1) {
+          const topCandidates = scoredMoves.slice(0, Math.min(6, scoredMoves.length));
+          let bestHardScore = -999999;
+
+          for (const cand of topCandidates) {
+            const m = cand.move;
+            // Temporarily apply move
+            board[m.from.r][m.from.c] = 0;
+            board[m.to.r][m.to.c] = 2;
+
+            // Check if this move wins immediately
+            const total = getPieceCount(cornerMode);
+            const inGoal = countInGoal(2);
+            if (inGoal === total) {
+              board[m.to.r][m.to.c] = 0;
+              board[m.from.r][m.from.c] = 2;
+              bestMove = m;
+              break;
+            }
+
+            // Estimate Player 1's best counter response
+            let p1BestProgress = 0;
+            for (let pr = 0; pr < 8; pr++) {
+              for (let pc = 0; pc < 8; pc++) {
+                if (board[pr][pc] === 1) {
+                  const p1Moves = getMovesForPiece(pr, pc);
+                  for (const pm of p1Moves) {
+                    const prog = (pm.to.r + pm.to.c) - (pm.from.r + pm.from.c);
+                    if (prog > p1BestProgress) p1BestProgress = prog;
+                  }
+                }
+              }
+            }
+
+            // Net minimax score
+            const hardScore = cand.score - (p1BestProgress * 12);
+            if (hardScore > bestHardScore) {
+              bestHardScore = hardScore;
+              bestMove = m;
+            }
+
+            // Revert move
+            board[m.to.r][m.to.c] = 0;
+            board[m.from.r][m.from.c] = 2;
           }
         }
+
+        // Record best move in AI move memory
+        aiRecentMoves.push({ from: { ...bestMove.from }, to: { ...bestMove.to } });
+        if (aiRecentMoves.length > 10) aiRecentMoves.shift();
 
         document.getElementById('ai-status').classList.add('hidden');
         executeMove(bestMove);
@@ -1333,6 +1511,7 @@
         p1Time = state.p1Time;
         p2Time = state.p2Time;
         lastMove = state.lastMove;
+        if (gameMode === 'ai' && aiRecentMoves.length > 0) aiRecentMoves.pop();
         selectedPos = null;
         illegalSquare = null;
         render();
@@ -1569,6 +1748,8 @@
       document.getElementById('btn-chat-toggle').classList.remove('hidden');
       document.getElementById('peer-status-banner').classList.remove('hidden');
       document.getElementById('btn-new-game').classList.add('hidden'); // REMOVE NEW GAME IN MULTIPLAYER
+      document.getElementById('p1-clock').classList.remove('hidden');
+      document.getElementById('p2-clock').classList.remove('hidden');
       document.getElementById('peer-status-text').textContent = `Room: ${code}`;
       document.getElementById('p1-name-label').textContent = p1Name;
       document.getElementById('p2-name-label').textContent = p2Name;

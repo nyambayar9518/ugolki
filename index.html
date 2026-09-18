@@ -76,7 +76,6 @@
       letter-spacing: 0.05em;
     }
 
-    /* Hide scrollbar on chip slider */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -94,10 +93,10 @@
   </div>
 
   <!-- ============================================== -->
-  <!-- 🏠 VIEW 1: CLEAN HOMEPAGE                      -->
+  <!-- 🏠 VIEW 1: CLEAN MINIMAL HOMEPAGE              -->
   <!-- ============================================== -->
-  <div id="view-home" class="w-full max-w-xl mx-auto flex-1 flex flex-col justify-between py-6 animate-in fade-in">
-    <!-- Clean Minimal Header -->
+  <div id="view-home" class="w-full max-w-md mx-auto flex-1 flex flex-col justify-between py-8 animate-in fade-in">
+    <!-- Header -->
     <header class="flex items-center justify-between pb-4 border-b border-slate-800/80">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-400 flex items-center justify-center font-black text-white text-base shadow-md">
@@ -118,8 +117,8 @@
       </div>
     </header>
 
-    <!-- Compact Game Mode Options -->
-    <div class="my-auto py-6 flex flex-col gap-3.5">
+    <!-- Compact Clean Mode Selector -->
+    <div class="my-auto py-6 flex flex-col gap-3">
       <!-- Mode 1: Online Multiplayer -->
       <button onclick="openOnlineModal()" class="w-full p-4 bg-slate-800/70 hover:bg-slate-800 border border-emerald-500/40 hover:border-emerald-400 rounded-2xl transition flex items-center justify-between shadow-lg group">
         <div class="flex items-center gap-3.5">
@@ -128,7 +127,7 @@
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white">Online Multiplayer</div>
-            <div class="text-xs text-slate-400">Play with a friend via link or room code with live chat</div>
+            <div class="text-xs text-slate-400">P2P room code & invite link with chat</div>
           </div>
         </div>
         <span class="text-emerald-400 font-bold text-xs group-hover:translate-x-1 transition-transform">Play →</span>
@@ -156,7 +155,7 @@
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white">Pass & Play</div>
-            <div class="text-xs text-slate-400">2 players on one device with chess clock</div>
+            <div class="text-xs text-slate-400">2 players on 1 device with chess clock</div>
           </div>
         </div>
         <span class="text-amber-400 font-bold text-xs group-hover:translate-x-1 transition-transform">Play →</span>
@@ -164,7 +163,7 @@
 
       <!-- Rules Button -->
       <button onclick="toggleRules(true)" class="mt-2 w-full py-2.5 bg-slate-800/40 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition flex items-center justify-center gap-2">
-        <span>📖 How to Play & Rules</span>
+        <span>📖 Rules & How to Play</span>
       </button>
     </div>
 
@@ -176,19 +175,18 @@
 
 
   <!-- ============================================== -->
-  <!-- 🎮 VIEW 2: ACTIVE GAME BOARD                   -->
+  <!-- 🎮 VIEW 2: SIMPLIFIED GAME BOARD               -->
   <!-- ============================================== -->
   <div id="view-game" class="hidden w-full max-w-[560px] mx-auto flex-1 flex flex-col justify-between py-1 animate-in fade-in">
-    <!-- Top Game Nav -->
+    <!-- Top Nav Bar -->
     <div class="w-full flex items-center justify-between py-1 border-b border-slate-800/80 mb-2">
-      <button onclick="goToHome()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition">
+      <button onclick="goToHome()" class="flex items-center gap-1.5 px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition">
         <span>← Menu</span>
       </button>
 
-      <div class="flex items-center gap-2">
-        <span id="active-game-mode-badge" class="text-[11px] font-bold uppercase tracking-wider text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
-          Vs AI (Medium)
-        </span>
+      <!-- Match Score Counter -->
+      <div id="match-score-badge" class="px-3 py-1 bg-slate-800/80 border border-slate-700 rounded-xl text-xs font-bold text-slate-200">
+        Score: 0 - 0
       </div>
 
       <div class="flex items-center gap-1.5">
@@ -196,7 +194,7 @@
           <span>💬 Chat</span>
           <span id="chat-unread-badge" class="hidden w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">1</span>
         </button>
-        <button onclick="toggleRules(true)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold transition">
+        <button onclick="toggleRules(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold transition">
           Rules
         </button>
       </div>
@@ -215,14 +213,14 @@
       </button>
     </div>
 
-    <!-- Dashboard: Player Badges & Chess Clocks (Clean, NO progress bar!) -->
-    <div class="grid grid-cols-2 gap-3 mb-2">
+    <!-- Player Badges & Chess Clocks (Clean, NO progress bar!) -->
+    <div class="grid grid-cols-2 gap-2.5 mb-2">
       <!-- Player 1 Card -->
-      <div id="p1-card" class="p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 transition-all flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-2">
+      <div id="p1-card" class="p-2.5 sm:p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 transition-all flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-1.5">
           <div class="flex items-center gap-2">
             <div class="w-4 h-4 rounded-full piece-p1 flex-shrink-0"></div>
-            <span id="p1-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[105px]">Player 1 (White)</span>
+            <span id="p1-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[95px]">Player 1 (White)</span>
           </div>
           <span id="p1-turn-badge" class="text-[10px] font-bold uppercase bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded shadow">Turn</span>
         </div>
@@ -231,19 +229,18 @@
           <div class="text-[11px] text-slate-400">
             Goal: <strong id="p1-goal-text" class="text-slate-200 font-bold">0/12</strong>
           </div>
-          <!-- Digital Chess Clock -->
-          <div id="p1-clock" class="chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white">
+          <div id="p1-clock" class="chess-clock text-base sm:text-lg font-bold px-2 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white">
             05:00
           </div>
         </div>
       </div>
 
       <!-- Player 2 Card -->
-      <div id="p2-card" class="p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 transition-all flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-2">
+      <div id="p2-card" class="p-2.5 sm:p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 transition-all flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-1.5">
           <div class="flex items-center gap-2">
             <div class="w-4 h-4 rounded-full piece-p2 flex-shrink-0"></div>
-            <span id="p2-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[105px]">Computer</span>
+            <span id="p2-name-label" class="font-bold text-xs sm:text-sm text-white truncate max-w-[95px]">Computer</span>
           </div>
           <span id="p2-turn-badge" class="hidden text-[10px] font-bold uppercase bg-red-500 text-white px-1.5 py-0.5 rounded shadow">Turn</span>
         </div>
@@ -252,8 +249,7 @@
           <div class="text-[11px] text-slate-400">
             Goal: <strong id="p2-goal-text" class="text-slate-200 font-bold">0/12</strong>
           </div>
-          <!-- Digital Chess Clock -->
-          <div id="p2-clock" class="chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white">
+          <div id="p2-clock" class="chess-clock text-base sm:text-lg font-bold px-2 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white">
             05:00
           </div>
         </div>
@@ -279,21 +275,15 @@
       </div>
     </div>
 
-    <!-- Bottom Controls & Dynamic Multiplayer Chat Dock -->
+    <!-- Bottom Controls & Chat Bar -->
     <div class="w-full flex flex-col gap-2 mt-2">
 
       <!-- ============================================== -->
-      <!-- 💬 DEDICATED IN-GAME MULTIPLAYER CHAT DOCK    -->
+      <!-- 💬 IN-GAME MULTIPLAYER CHAT DOCK               -->
       <!-- ============================================== -->
-      <div id="inmatch-online-chat" class="hidden flex flex-col gap-1.5 bg-slate-800/90 p-2.5 rounded-2xl border border-emerald-500/40 shadow-xl animate-in fade-in">
-        <!-- Live Chat Preview Line -->
-        <div id="inmatch-chat-preview" class="flex items-center justify-between px-2.5 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs">
-          <span id="inmatch-chat-text" class="text-slate-300 truncate font-medium">💬 Live Chat with Opponent</span>
-          <button onclick="toggleChat(true)" class="text-emerald-400 hover:text-emerald-300 font-bold text-[11px] ml-2 flex-shrink-0">Full Log</button>
-        </div>
-
-        <!-- Quick Emojis Bar (1-click to pop on opponent's screen!) -->
-        <div class="flex items-center justify-between px-1 text-xl pt-0.5">
+      <div id="inmatch-online-chat" class="hidden flex flex-col gap-1.5 bg-slate-800/90 p-2 rounded-2xl border border-emerald-500/40 shadow-xl animate-in fade-in">
+        <!-- Quick Emojis Bar (1-tap to pop on opponent's screen!) -->
+        <div class="flex items-center justify-between px-1 text-xl">
           <button onclick="sendQuickReaction('👏')" class="hover:scale-125 active:scale-95 transition" title="Clap">👏</button>
           <button onclick="sendQuickReaction('🔥')" class="hover:scale-125 active:scale-95 transition" title="Fire">🔥</button>
           <button onclick="sendQuickReaction('🎉')" class="hover:scale-125 active:scale-95 transition" title="Party">🎉</button>
@@ -305,22 +295,21 @@
         </div>
 
         <!-- Quick Phrase Chips -->
-        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 text-[11px] no-scrollbar">
-          <button onclick="sendChatMessage('Good luck!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Good luck!</button>
-          <button onclick="sendChatMessage('Nice jump!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Nice jump!</button>
-          <button onclick="sendChatMessage('Oops!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Oops!</button>
-          <button onclick="sendChatMessage('Well played!')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Well played!</button>
-          <button onclick="sendChatMessage('Rematch?')" class="px-2.5 py-1 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Rematch?</button>
+        <div class="flex items-center gap-1 overflow-x-auto py-0.5 text-[11px] no-scrollbar">
+          <button onclick="sendChatMessage('Good luck!')" class="px-2.5 py-0.5 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Good luck!</button>
+          <button onclick="sendChatMessage('Nice jump!')" class="px-2.5 py-0.5 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Nice jump!</button>
+          <button onclick="sendChatMessage('Oops!')" class="px-2.5 py-0.5 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Oops!</button>
+          <button onclick="sendChatMessage('Well played!')" class="px-2.5 py-0.5 bg-slate-700/70 hover:bg-slate-700 border border-slate-600/70 rounded-full text-slate-200 whitespace-nowrap transition">Well played!</button>
         </div>
 
-        <!-- In-Match Text Input Bar -->
+        <!-- In-Match Text Input -->
         <div class="flex items-center gap-1.5 pt-0.5">
-          <input id="inmatch-chat-input" type="text" maxlength="60" placeholder="Type a message to opponent..." class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500" onkeydown="if(event.key==='Enter') sendInMatchChat()" />
-          <button onclick="sendInMatchChat()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow transition">Send</button>
+          <input id="inmatch-chat-input" type="text" maxlength="60" placeholder="Type a message..." class="flex-1 px-3 py-1 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500" onkeydown="if(event.key==='Enter') sendInMatchChat()" />
+          <button onclick="sendInMatchChat()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow transition">Send</button>
         </div>
       </div>
 
-      <!-- In-match offline options bar (for AI / Pass & Play) -->
+      <!-- In-match offline options bar (for AI / Pass & Play only) -->
       <div id="inmatch-offline-bar" class="flex flex-wrap items-center justify-between gap-2 bg-slate-800/60 p-2 rounded-xl border border-slate-700/50 text-xs">
         <div class="flex items-center gap-1">
           <span class="text-slate-400 font-medium">Corners:</span>
@@ -345,10 +334,12 @@
           <button onclick="undoMove()" id="btn-undo" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition disabled:opacity-40" disabled>
             Undo
           </button>
-          <button onclick="handleNewGameClick()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          <!-- New Game button (HIDDEN in multiplayer; only Resign is kept!) -->
+          <button onclick="handleNewGameClick()" id="btn-new-game" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
             New Game
           </button>
-          <button onclick="resignMatch()" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-950/50 border border-slate-700 text-rose-400 rounded-xl text-xs font-semibold transition">
+          <!-- Resign button (Kept in all modes!) -->
+          <button onclick="resignMatch()" id="btn-resign" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-950/50 border border-slate-700 text-rose-400 rounded-xl text-xs font-semibold transition">
             Resign
           </button>
         </div>
@@ -446,7 +437,7 @@
 
 
   <!-- ============================================== -->
-  <!-- 💬 MODAL: FULL CHAT HISTORY & REACTION LOG    -->
+  <!-- 💬 MODAL: FULL CHAT HISTORY LOG                -->
   <!-- ============================================== -->
   <div id="modal-chat" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-sm h-[480px] shadow-2xl flex flex-col overflow-hidden">
@@ -488,27 +479,43 @@
 
 
   <!-- ============================================== -->
-  <!-- 🏆 MODAL: GAME OVER                            -->
+  <!-- 🏆 MODAL: GAME OVER (Personalized Win/Loss)    -->
   <!-- ============================================== -->
   <div id="modal-gameover" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl flex flex-col items-center">
-      <div id="gameover-trophy" class="w-16 h-16 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-3xl mb-3">
+      <!-- Trophy or Defeat Icon -->
+      <div id="gameover-icon-box" class="w-16 h-16 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-3xl mb-3">
         🏆
       </div>
-      <h2 id="gameover-title" class="text-2xl font-extrabold text-white mb-1">Player 1 Wins!</h2>
-      <p id="gameover-reason" class="text-xs text-slate-300 mb-5 leading-relaxed">All pieces reached the goal corner!</p>
+      <h2 id="gameover-title" class="text-2xl font-extrabold text-white mb-1">You Win!</h2>
+      <p id="gameover-reason" class="text-xs text-slate-300 mb-4 leading-relaxed">All pieces reached the goal corner!</p>
 
-      <div class="w-full bg-slate-800 p-3 rounded-xl mb-5 flex justify-around text-xs">
-        <div><span class="text-slate-400 block">Rounds</span><strong id="gameover-rounds" class="text-base text-white">12</strong></div>
-        <div><span class="text-slate-400 block">Moves</span><strong id="gameover-moves" class="text-base text-white">24</strong></div>
+      <!-- Match Series Score -->
+      <div class="w-full bg-slate-800/80 border border-slate-700 p-3 rounded-2xl mb-4 flex items-center justify-around text-xs">
+        <div>
+          <span id="score-label-p1" class="text-slate-400 block font-medium">You</span>
+          <strong id="score-val-p1" class="text-lg text-white font-bold">0</strong>
+        </div>
+        <div class="text-slate-500 font-bold text-base">—</div>
+        <div>
+          <span id="score-label-p2" class="text-slate-400 block font-medium">Opponent</span>
+          <strong id="score-val-p2" class="text-lg text-white font-bold">0</strong>
+        </div>
       </div>
 
-      <div class="flex gap-2 w-full">
-        <button onclick="handleRematch()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg text-xs font-bold">
-          Play Again
+      <!-- Stats -->
+      <div class="w-full bg-slate-800/50 p-2.5 rounded-xl mb-4 flex justify-around text-xs text-slate-400">
+        <div>Rounds: <strong id="gameover-rounds" class="text-slate-200">12</strong></div>
+        <div>Moves: <strong id="gameover-moves" class="text-slate-200">24</strong></div>
+      </div>
+
+      <!-- Rematch Button (0/2 -> 1/2 -> 2/2) -->
+      <div class="flex flex-col gap-2 w-full">
+        <button id="btn-rematch-action" onclick="handleRematchVote()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg text-xs flex items-center justify-center gap-2">
+          <span>Rematch (0/2)</span>
         </button>
-        <button onclick="toggleGameOver(false)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
-          View Board
+        <button onclick="toggleGameOver(false)" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          View Final Board
         </button>
       </div>
     </div>
@@ -520,7 +527,7 @@
   <!-- ============================================== -->
   <div id="modal-rules" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-300 text-xs leading-relaxed max-h-[85vh] overflow-y-auto">
-      <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2">📖 How to Play Ugolki (Corners)</h2>
+      <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2">📖 Rules of Ugolki (Corners)</h2>
 
       <div class="space-y-3">
         <div>
@@ -603,6 +610,12 @@
         setTimeout(() => playTone(f, 0.35, 'triangle', 0.2), i * 120);
       });
     }
+    function playDefeatSound() {
+      if (!audioEnabled) return;
+      [330, 261, 196].forEach((f, i) => {
+        setTimeout(() => playTone(f, 0.35, 'sawtooth', 0.14), i * 140);
+      });
+    }
 
     // --- State Variables ---
     let board = [];
@@ -612,6 +625,7 @@
     let p1FinishedAtRound = null;
     let selectedPos = null;
     let illegalSquare = null; // { r, c }
+    let lastMove = null; // { from, to, path, isJump }
     let history = [];
     let cornerMode = '3x4';
     let gameMode = 'ai'; // 'ai' | 'pass' | 'online'
@@ -619,6 +633,14 @@
     let theme = 'wood';
     let flipped = false;
     let gameOver = false;
+
+    // --- Win / Loss Score Tracking ---
+    let p1Wins = 0;
+    let p2Wins = 0;
+    let draws = 0;
+
+    // --- Rematch Voting (0/2 -> 1/2 -> 2/2) ---
+    let rematchVotes = new Set();
 
     // --- Chess Clock Variables ---
     let chessClockPreset = 300; // 5 minutes default (0 = unlimited)
@@ -669,12 +691,14 @@
 
     function startAIMatchFromHome() {
       gameMode = 'ai';
-      document.getElementById('active-game-mode-badge').textContent = `Vs AI (${aiDifficulty})`;
+      p1Wins = 0; p2Wins = 0; draws = 0;
+      updateScoreDisplay();
       document.getElementById('inmatch-offline-bar').classList.remove('hidden');
       document.getElementById('inmatch-online-chat').classList.add('hidden');
       document.getElementById('btn-chat-toggle').classList.add('hidden');
       document.getElementById('peer-status-banner').classList.add('hidden');
-      document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
+      document.getElementById('btn-new-game').classList.remove('hidden');
+      document.getElementById('p1-name-label').textContent = 'You (White)';
       document.getElementById('p2-name-label').textContent = `Computer (${aiDifficulty})`;
       flipped = false;
       goToGame();
@@ -683,16 +707,31 @@
 
     function startPassPlayFromHome() {
       gameMode = 'pass';
-      document.getElementById('active-game-mode-badge').textContent = 'Pass & Play';
+      p1Wins = 0; p2Wins = 0; draws = 0;
+      updateScoreDisplay();
       document.getElementById('inmatch-offline-bar').classList.remove('hidden');
       document.getElementById('inmatch-online-chat').classList.add('hidden');
       document.getElementById('btn-chat-toggle').classList.add('hidden');
       document.getElementById('peer-status-banner').classList.add('hidden');
+      document.getElementById('btn-new-game').classList.remove('hidden');
       document.getElementById('p1-name-label').textContent = 'Player 1 (White)';
       document.getElementById('p2-name-label').textContent = 'Player 2 (Red)';
       flipped = false;
       goToGame();
       initGame();
+    }
+
+    function updateScoreDisplay() {
+      const badge = document.getElementById('match-score-badge');
+      if (gameMode === 'online') {
+        const myScore = myPlayerNum === 1 ? p1Wins : p2Wins;
+        const oppScore = myPlayerNum === 1 ? p2Wins : p1Wins;
+        badge.textContent = `Score: You ${myScore} - ${oppScore} Opp`;
+      } else if (gameMode === 'ai') {
+        badge.textContent = `Score: You ${p1Wins} - ${p2Wins} AI`;
+      } else {
+        badge.textContent = `Score: P1 ${p1Wins} - ${p2Wins} P2`;
+      }
     }
 
     function formatTime(seconds) {
@@ -752,15 +791,15 @@
       p2Elem.textContent = formatTime(p2Time);
 
       if (chessClockPreset > 0 && p1Time <= 20) {
-        p1Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-rose-950/80 border border-rose-500 text-rose-300 animate-pulse';
+        p1Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2 py-0.5 rounded-lg bg-rose-950/80 border border-rose-500 text-rose-300 animate-pulse';
       } else {
-        p1Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white';
+        p1Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white';
       }
 
       if (chessClockPreset > 0 && p2Time <= 20) {
-        p2Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-rose-950/80 border border-rose-500 text-rose-300 animate-pulse';
+        p2Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2 py-0.5 rounded-lg bg-rose-950/80 border border-rose-500 text-rose-300 animate-pulse';
       } else {
-        p2Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white';
+        p2Elem.className = 'chess-clock text-base sm:text-lg font-bold px-2 py-0.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white';
       }
     }
 
@@ -795,6 +834,8 @@
       p1FinishedAtRound = null;
       selectedPos = null;
       illegalSquare = null;
+      lastMove = null;
+      rematchVotes.clear();
       history = [];
       gameOver = false;
       p1Time = chessClockPreset;
@@ -802,6 +843,7 @@
 
       document.getElementById('equal-turns-banner').classList.add('hidden');
       updateClocksDisplay();
+      updateScoreDisplay();
       render();
       startClock();
     }
@@ -811,17 +853,23 @@
       const p = board[r][c];
       if (!p) return moves;
 
-      // 1. Single Step
+      // 1. Single Step (stores path: [from, to])
       for (const { dr, dc } of DIRS) {
         const nr = r + dr, nc = c + dc;
         if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr][nc] === 0) {
-          moves.push({ from: { r, c }, to: { r: nr, c: nc }, hops: 1, isJump: false });
+          moves.push({
+            from: { r, c },
+            to: { r: nr, c: nc },
+            path: [{ r, c }, { r: nr, c: nc }],
+            hops: 1,
+            isJump: false
+          });
         }
       }
 
-      // 2. BFS Multi-Jumps
+      // 2. BFS Multi-Jumps (stores exact hop sequence in path)
       const visited = new Set([`${r},${c}`]);
-      const queue = [{ pos: { r, c }, hops: 0 }];
+      const queue = [{ pos: { r, c }, path: [{ r, c }], hops: 0 }];
 
       while (queue.length > 0) {
         const curr = queue.shift();
@@ -834,8 +882,15 @@
               if (!visited.has(key)) {
                 visited.add(key);
                 const nextHops = curr.hops + 1;
-                moves.push({ from: { r, c }, to: { r: landR, c: landC }, hops: nextHops, isJump: true });
-                queue.push({ pos: { r: landR, c: landC }, hops: nextHops });
+                const nextPath = [...curr.path, { r: landR, c: landC }];
+                moves.push({
+                  from: { r, c },
+                  to: { r: landR, c: landC },
+                  path: nextPath,
+                  hops: nextHops,
+                  isJump: true
+                });
+                queue.push({ pos: { r: landR, c: landC }, path: nextPath, hops: nextHops });
               }
             }
           }
@@ -896,12 +951,14 @@
         moveCount,
         p1FinishedAtRound,
         p1Time,
-        p2Time
+        p2Time,
+        lastMove
       });
 
       const p = board[move.from.r][move.from.c];
       board[move.from.r][move.from.c] = 0;
       board[move.to.r][move.to.c] = p;
+      lastMove = move; // Record last move for trajectory dots
 
       if (move.isJump) playJumpSound(move.hops - 1);
       else playStepSound();
@@ -997,20 +1054,44 @@
           const isSelected = selectedPos && selectedPos.r === r && selectedPos.c === c;
           const isIllegal = illegalSquare && illegalSquare.r === r && illegalSquare.c === c;
 
+          // Check if this square is part of the last move trajectory!
+          const isLastFrom = lastMove && lastMove.from.r === r && lastMove.from.c === c;
+          const isLastTo = lastMove && lastMove.to.r === r && lastMove.to.c === c;
+          const isIntermediateHop = lastMove && lastMove.isJump && lastMove.path &&
+            lastMove.path.some((pt, idx) => idx > 0 && idx < lastMove.path.length - 1 && pt.r === r && pt.c === c);
+
           const cell = document.createElement('div');
           cell.className = `relative flex items-center justify-center cursor-pointer transition-colors ${
-            isIllegal ? 'sq-illegal' : isDark ? 'sq-dark' : 'sq-light'
+            isIllegal
+              ? 'sq-illegal'
+              : (isLastFrom || isLastTo)
+              ? '!bg-amber-400/25'
+              : isDark ? 'sq-dark' : 'sq-light'
           }`;
 
           // Subtle home corners dashed outline
           if (isP1Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-white/40 pointer-events-none rounded"></div>`;
           if (isP2Home) cell.innerHTML += `<div class="absolute inset-0.5 border border-dashed border-red-500/50 pointer-events-none rounded"></div>`;
 
-          // Piece (NO trajectory markers!)
+          // LAST MOVE TRAJECTORY DOT (shows intermediate jump landing squares with a little dot!)
+          if (isIntermediateHop) {
+            const dot = document.createElement('div');
+            dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 shadow-md ring-2 ring-amber-300/60 pointer-events-none z-10';
+            cell.appendChild(dot);
+          }
+
+          // If last origin square is now empty, put a subtle marker so player sees where piece came from
+          if (isLastFrom && p === 0 && !isIntermediateHop) {
+            const fromDot = document.createElement('div');
+            fromDot.className = 'w-2 h-2 rounded-full bg-amber-400/50 pointer-events-none z-10';
+            cell.appendChild(fromDot);
+          }
+
+          // Piece
           if (p !== 0) {
             const pieceDiv = document.createElement('div');
             pieceDiv.className = `w-[82%] h-[82%] rounded-full flex items-center justify-center ${p === 1 ? 'piece-p1' : 'piece-p2'} ${
-              isSelected ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900 scale-105' : 'hover:scale-105'
+              isSelected ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900 scale-105' : isLastTo ? 'ring-2 ring-amber-400' : 'hover:scale-105'
             } transition-all`;
             pieceDiv.innerHTML = `<div class="w-[65%] h-[65%] rounded-full border border-white/30 flex items-center justify-center"><div class="w-[40%] h-[40%] rounded-full bg-black/20"></div></div>`;
             cell.appendChild(pieceDiv);
@@ -1066,28 +1147,160 @@
       document.getElementById('p1-turn-badge').className = p1Turn ? 'text-[10px] font-bold uppercase bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded shadow' : 'hidden';
       document.getElementById('p2-turn-badge').className = !p1Turn ? 'text-[10px] font-bold uppercase bg-red-500 text-white px-1.5 py-0.5 rounded shadow' : 'hidden';
 
-      document.getElementById('p1-card').className = p1Turn ? 'p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 shadow-lg ring-2 ring-amber-400/40 flex flex-col justify-between' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 flex flex-col justify-between';
-      document.getElementById('p2-card').className = !p1Turn ? 'p-3 rounded-2xl border border-red-500/80 bg-slate-800/90 shadow-lg ring-2 ring-red-500/40 flex flex-col justify-between' : 'p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 flex flex-col justify-between';
+      document.getElementById('p1-card').className = p1Turn ? 'p-2.5 sm:p-3 rounded-2xl border border-amber-400/80 bg-slate-800/90 shadow-lg ring-2 ring-amber-400/40 flex flex-col justify-between' : 'p-2.5 sm:p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 flex flex-col justify-between';
+      document.getElementById('p2-card').className = !p1Turn ? 'p-2.5 sm:p-3 rounded-2xl border border-red-500/80 bg-slate-800/90 shadow-lg ring-2 ring-red-500/40 flex flex-col justify-between' : 'p-2.5 sm:p-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 opacity-80 flex flex-col justify-between';
 
       document.getElementById('btn-undo').disabled = history.length === 0 || gameMode === 'online';
       updateClocksDisplay();
+      updateScoreDisplay();
     }
 
+    // --- Personalized Game Over Handler (Fixes Both Players Getting "You Win") ---
     function showGameOver(res) {
       stopClock();
-      if (res.winner === 1 || res.winner === 'draw') playVictorySound();
-      if (window.confetti && (res.winner === 1 || res.winner === 2)) {
-        confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
-      }
-      const p1Label = document.getElementById('p1-name-label').textContent;
-      const p2Label = document.getElementById('p2-name-label').textContent;
-      const winText = res.winner === 'draw' ? 'Match Draw!' : res.winner === 1 ? `${p1Label} Wins!` : `${p2Label} Wins!`;
+      rematchVotes.clear();
 
-      document.getElementById('gameover-title').textContent = winText;
+      let iWon = false;
+      let title = '';
+      const iconBox = document.getElementById('gameover-icon-box');
+
+      if (res.winner === 'draw') {
+        draws++;
+        title = "It's a Draw!";
+        iconBox.innerHTML = '⚖️';
+        iconBox.className = 'w-16 h-16 rounded-full bg-slate-700/50 border-2 border-slate-500 flex items-center justify-center text-3xl mb-3';
+      } else if (gameMode === 'online') {
+        if (res.winner === myPlayerNum) {
+          iWon = true;
+          if (myPlayerNum === 1) p1Wins++; else p2Wins++;
+          title = 'You Win!';
+          iconBox.innerHTML = '🏆';
+          iconBox.className = 'w-16 h-16 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-3xl mb-3';
+        } else {
+          iWon = false;
+          if (myPlayerNum === 1) p2Wins++; else p1Wins++;
+          title = 'You Lost';
+          iconBox.innerHTML = '💔';
+          iconBox.className = 'w-16 h-16 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center text-3xl mb-3';
+        }
+      } else if (gameMode === 'ai') {
+        if (res.winner === 1) {
+          iWon = true;
+          p1Wins++;
+          title = 'You Win!';
+          iconBox.innerHTML = '🏆';
+          iconBox.className = 'w-16 h-16 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-3xl mb-3';
+        } else {
+          iWon = false;
+          p2Wins++;
+          title = 'Computer Wins';
+          iconBox.innerHTML = '🤖';
+          iconBox.className = 'w-16 h-16 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center text-3xl mb-3';
+        }
+      } else {
+        // Pass & Play
+        if (res.winner === 1) p1Wins++; else p2Wins++;
+        title = res.winner === 1 ? 'Player 1 (White) Wins!' : 'Player 2 (Red) Wins!';
+        iconBox.innerHTML = '🏆';
+        iconBox.className = 'w-16 h-16 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-3xl mb-3';
+        iWon = true;
+      }
+
+      // Sounds & Confetti
+      if (iWon) {
+        playVictorySound();
+        if (window.confetti) confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+      } else if (res.winner !== 'draw') {
+        playDefeatSound();
+      }
+
+      document.getElementById('gameover-title').textContent = title;
       document.getElementById('gameover-reason').textContent = res.reason;
       document.getElementById('gameover-rounds').textContent = roundNumber;
       document.getElementById('gameover-moves').textContent = moveCount;
+
+      // Update series score in modal
+      if (gameMode === 'online') {
+        document.getElementById('score-label-p1').textContent = 'You';
+        document.getElementById('score-val-p1').textContent = myPlayerNum === 1 ? p1Wins : p2Wins;
+        document.getElementById('score-label-p2').textContent = 'Opponent';
+        document.getElementById('score-val-p2').textContent = myPlayerNum === 1 ? p2Wins : p1Wins;
+      } else if (gameMode === 'ai') {
+        document.getElementById('score-label-p1').textContent = 'You';
+        document.getElementById('score-val-p1').textContent = p1Wins;
+        document.getElementById('score-label-p2').textContent = 'AI';
+        document.getElementById('score-val-p2').textContent = p2Wins;
+      } else {
+        document.getElementById('score-label-p1').textContent = 'Player 1';
+        document.getElementById('score-val-p1').textContent = p1Wins;
+        document.getElementById('score-label-p2').textContent = 'Player 2';
+        document.getElementById('score-val-p2').textContent = p2Wins;
+      }
+
+      // Rematch button initial state
+      updateRematchButtonUI();
+      updateScoreDisplay();
       document.getElementById('modal-gameover').classList.remove('hidden');
+    }
+
+    // --- Rematch Voting Logic (0/2 -> 1/2 -> 2/2) ---
+    function updateRematchButtonUI() {
+      const btn = document.getElementById('btn-rematch-action');
+      if (!btn) return;
+
+      if (gameMode !== 'online') {
+        btn.textContent = 'Play Again';
+        btn.disabled = false;
+        return;
+      }
+
+      const voteCount = rematchVotes.size;
+      const didIVote = rematchVotes.has(myPlayerNum);
+
+      if (voteCount === 0) {
+        btn.textContent = 'Rematch (0/2)';
+        btn.className = 'w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg text-xs';
+        btn.disabled = false;
+      } else if (voteCount === 1) {
+        if (didIVote) {
+          btn.textContent = 'Rematch Requested (1/2) — Waiting for Opponent...';
+          btn.className = 'w-full py-3 bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-default';
+          btn.disabled = true;
+        } else {
+          btn.textContent = 'Opponent Wants Rematch! Accept (1/2)';
+          btn.className = 'w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg text-xs animate-pulse ring-2 ring-emerald-400';
+          btn.disabled = false;
+        }
+      } else if (voteCount >= 2) {
+        btn.textContent = 'Rematch Accepted (2/2)! Starting...';
+        btn.className = 'w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs';
+        btn.disabled = true;
+      }
+    }
+
+    function handleRematchVote() {
+      if (gameMode !== 'online') {
+        toggleGameOver(false);
+        initGame();
+        return;
+      }
+
+      // In online mode: add local vote
+      rematchVotes.add(myPlayerNum);
+      updateRematchButtonUI();
+
+      if (peerConn) {
+        peerConn.send({ type: 'REMATCH_VOTE', player: myPlayerNum });
+      }
+
+      // Check if both players voted (2/2)
+      if (rematchVotes.size >= 2) {
+        if (peerConn) peerConn.send({ type: 'REMATCH_ACCEPTED' });
+        setTimeout(() => {
+          toggleGameOver(false);
+          initGame();
+        }, 600);
+      }
     }
 
     function toggleGameOver(show) {
@@ -1119,6 +1332,7 @@
         p1FinishedAtRound = state.p1FinishedAtRound;
         p1Time = state.p1Time;
         p2Time = state.p2Time;
+        lastMove = state.lastMove;
         selectedPos = null;
         illegalSquare = null;
         render();
@@ -1130,27 +1344,15 @@
       if (gameMode === 'online' && peerConn) {
         peerConn.send({ type: 'RESIGN', player: myPlayerNum });
       }
+      const otherPlayer = currentTurn === 1 ? 2 : 1;
       showGameOver({
-        winner: currentTurn === 1 ? 2 : 1,
-        reason: `Player ${currentTurn} resigned the match.`
+        winner: otherPlayer,
+        reason: `${currentTurn === 1 ? 'Player 1' : 'Player 2'} surrendered the match.`
       });
     }
 
-    function handleRematch() {
-      toggleGameOver(false);
-      if (gameMode === 'online' && peerConn) {
-        peerConn.send({ type: 'REMATCH' });
-      }
-      initGame();
-    }
-
     function handleNewGameClick() {
-      if (gameMode === 'online') {
-        if (confirm('Start a new online match?')) {
-          initGame();
-          if (peerConn) peerConn.send({ type: 'REMATCH' });
-        }
-      } else {
+      if (gameMode !== 'online') {
         initGame();
       }
     }
@@ -1233,6 +1435,7 @@
       flipped = false;
       cornerMode = hostCornerChoice;
       chessClockPreset = hostClockChoice;
+      p1Wins = 0; p2Wins = 0; draws = 0;
 
       document.getElementById('btn-start-host').disabled = true;
       document.getElementById('btn-start-host').textContent = 'Creating room...';
@@ -1246,7 +1449,7 @@
         document.getElementById('tab-host-content').classList.add('hidden');
         document.getElementById('host-active-info').classList.remove('hidden');
 
-        setOnlineGameActive(code, `${myName} (Host)`, 'Waiting for Opponent...');
+        setOnlineGameActive(code, `${myName} (You)`, 'Waiting for Opponent...');
       });
 
       peer.on('connection', conn => {
@@ -1269,6 +1472,7 @@
       activeRoomCode = code;
       myPlayerNum = 2;
       flipped = true;
+      p1Wins = 0; p2Wins = 0; draws = 0;
 
       document.getElementById('btn-start-join').disabled = true;
       document.getElementById('btn-start-join').textContent = 'Connecting...';
@@ -1324,8 +1528,24 @@
           if (data.p1Time !== undefined) p1Time = data.p1Time;
           if (data.p2Time !== undefined) p2Time = data.p2Time;
           executeMove(data.move, true);
-        } else if (data.type === 'REMATCH') {
-          initGame();
+        } else if (data.type === 'REMATCH_VOTE') {
+          rematchVotes.add(data.player);
+          updateRematchButtonUI();
+          if (rematchVotes.size >= 2) {
+            conn.send({ type: 'REMATCH_ACCEPTED' });
+            setTimeout(() => {
+              toggleGameOver(false);
+              initGame();
+            }, 600);
+          }
+        } else if (data.type === 'REMATCH_ACCEPTED') {
+          rematchVotes.add(1);
+          rematchVotes.add(2);
+          updateRematchButtonUI();
+          setTimeout(() => {
+            toggleGameOver(false);
+            initGame();
+          }, 600);
         } else if (data.type === 'RESIGN') {
           showGameOver({
             winner: myPlayerNum,
@@ -1344,11 +1564,11 @@
 
     function setOnlineGameActive(code, p1Name, p2Name) {
       gameMode = 'online';
-      document.getElementById('active-game-mode-badge').textContent = `Online P2P (${code})`;
       document.getElementById('inmatch-offline-bar').classList.add('hidden');
       document.getElementById('inmatch-online-chat').classList.remove('hidden');
       document.getElementById('btn-chat-toggle').classList.remove('hidden');
       document.getElementById('peer-status-banner').classList.remove('hidden');
+      document.getElementById('btn-new-game').classList.add('hidden'); // REMOVE NEW GAME IN MULTIPLAYER
       document.getElementById('peer-status-text').textContent = `Room: ${code}`;
       document.getElementById('p1-name-label').textContent = p1Name;
       document.getElementById('p2-name-label').textContent = p2Name;
@@ -1363,9 +1583,7 @@
       });
     }
 
-    // ==============================================
-    // --- In-Game Multiplayer Chat Implementation ---
-    // ==============================================
+    // In-Game Multiplayer Chat
     function sendQuickReaction(emoji) {
       if (!peerConn) return;
       const myName = document.getElementById('input-player-name').value.trim() || 'Player';
@@ -1397,7 +1615,6 @@
     }
 
     function displayChatMessage(sender, text, isEmoji) {
-      // 1. Append to full history modal
       const box = document.getElementById('chat-messages-box');
       const msgDiv = document.createElement('div');
       msgDiv.className = 'p-2 rounded-xl bg-slate-800 border border-slate-700 max-w-[85%]';
@@ -1405,13 +1622,7 @@
       box.appendChild(msgDiv);
       box.scrollTop = box.scrollHeight;
 
-      // 2. Update persistent in-game preview text line
-      const previewText = document.getElementById('inmatch-chat-text');
-      if (previewText) {
-        previewText.textContent = `${sender}: ${text}`;
-      }
-
-      // 3. Show animated speech bubble toast at top of board
+      // Toast notification
       const toast = document.getElementById('live-chat-toast');
       const toastSender = document.getElementById('toast-sender');
       const toastText = document.getElementById('toast-text');
@@ -1426,7 +1637,6 @@
         }, 3800);
       }
 
-      // 4. If emoji, float across screen
       if (isEmoji) {
         const floatBox = document.getElementById('floating-emojis-container');
         const emoDiv = document.createElement('div');
@@ -1436,7 +1646,6 @@
         setTimeout(() => emoDiv.remove(), 2200);
       }
 
-      // 5. Update unread badge on top header if modal is closed
       const isChatHidden = document.getElementById('modal-chat').classList.contains('hidden');
       if (isChatHidden) {
         unreadChat++;
@@ -1446,7 +1655,7 @@
       }
     }
 
-    // Check if opened via shareable invite URL (?join=CODE)
+    // Auto-open modal if invite link ?join=CODE was used
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const joinCode = params.get('join');
